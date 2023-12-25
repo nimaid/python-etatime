@@ -86,7 +86,7 @@ class Eta:
         :return: The user-friendly progress string.
         :rtype: str
         """
-        return self.__str__()
+        return self.statistics_string()
 
     def _validate_item_index(
             self,
@@ -215,18 +215,55 @@ class Eta:
         :return: A human-readable string that includes (in order) completion, time remaining, and ETA.
         :rtype: str
         """
-        percent_string = self.string(self.Value.COMPLETION)
+        completion_string = self.string(self.Value.COMPLETION)
 
         if self.item_index <= 0:
-            return percent_string
+            return completion_string
 
         difference_string = self.string(self.Value.TIME_REMAINING)
         eta_string = self.string(self.Value.ETA)
         if self.verbose:
             difference_string = f"Time remaining: {difference_string}"
             eta_string = f"ETA: {eta_string}"
+        else:
+            difference_string = f"R: {difference_string}"
+            eta_string = f"E: {eta_string}"
 
-        return sep.join([percent_string, difference_string, eta_string])
+        return sep.join([completion_string, difference_string, eta_string])
+
+    @validate_call
+    def statistics_string(
+            self,
+            sep: str = EtaDefaults.sep
+    ) -> str:
+        """Combine all the stats into a string focused on conveying everything useful about this object.
+
+        :param str sep: The string to use as a seperator between fields.
+
+        :raises pydantic.ValidationError: Raised when a parameter is invalid.
+
+        :return: A human-readable string that includes all useful statistics about this object.
+        :rtype: str
+        """
+        time_taken_string = self.string(self.Value.TIME_TAKEN)
+        start_time_string = self.string(self.Value.START_TIME)
+        current_time_string = self.string(self.Value.CURRENT_TIME)
+
+        if self.verbose:
+            time_taken_string = f"Time taken: {time_taken_string}"
+            start_time_string = f"Start time: {start_time_string}"
+            current_time_string = f"Time of estimation: {current_time_string}"
+        else:
+            time_taken_string = f"T: {time_taken_string}"
+            start_time_string = f"S: {start_time_string}"
+            current_time_string = f"C: {current_time_string}"
+
+        return sep.join([
+            self.progress_string(),
+            start_time_string,
+            current_time_string,
+            time_taken_string
+        ])
 
     @validate_call
     def complete(
@@ -280,20 +317,11 @@ class EtaCalculator:
         if start_time is None:
             start_time = datetime.datetime.now()
 
-        self.total_items = None
-        self.set_total_items(total_items)
-
-        self.start_time = None
-        self.set_start_time(start_time)
-
-        self.verbose = None
-        self.set_verbose(verbose)
-
-        self.percent_decimals = None
-        self.set_percent_decimals(percent_decimals)
-
-        self.not_enough_data_string = None
-        self.set_not_enough_data_string(not_enough_data_string)
+        self.total_items = total_items
+        self.start_time = start_time
+        self.verbose = verbose
+        self.percent_decimals = percent_decimals
+        self.not_enough_data_string = not_enough_data_string
 
     def __str__(self) -> str:
         """Return the string format of this ETA calculator object.
@@ -342,80 +370,6 @@ class EtaCalculator:
             verbose=self.verbose,
             percent_decimals=self.percent_decimals
         )
-
-    @validate_call
-    def set_total_items(
-            self,
-            total_items: Annotated[NonNegativeInt, Field(gt=1)]
-    ) -> None:
-        """Set the total number of items to process.
-
-        :param int total_items: The total number of items to process, used in computations.
-
-        :raises pydantic.ValidationError: Raised when a parameter is invalid.
-
-        :rtype: None
-        """
-        self.total_items = total_items
-
-    @validate_call
-    def set_start_time(
-            self,
-            start_time: datetime.datetime = None
-    ) -> None:
-        """Set the start time.
-
-        :param datetime.datetime start_time: The starting time to use for the computation, defaults to now.
-
-        :raises pydantic.ValidationError: Raised when a parameter is invalid.
-
-        :rtype: None
-        """
-        if start_time is None:
-            start_time = datetime.datetime.now()
-
-        self.start_time = start_time
-
-    @validate_call
-    def set_verbose(
-            self,
-            verbose: bool
-    ) -> None:
-        """Set the verbosity of the strings.
-
-        :param bool verbose: If we should make strings verbosely or not.
-
-        :raises pydantic.ValidationError: Raised when a parameter is invalid.
-
-        :rtype: None
-        """
-        self.verbose = verbose
-
-    @validate_call
-    def set_percent_decimals(
-            self,
-            percent_decimals: NonNegativeInt
-    ) -> None:
-        """Set the number of decimal places to use in the percentage string.
-
-        :param int percent_decimals: The number of decimal places to use in the percentage string.
-
-        :rtype: None
-        """
-        self.percent_decimals = percent_decimals
-
-    @validate_call
-    def set_not_enough_data_string(
-            self,
-            not_enough_data_string: str
-    ) -> None:
-        """Set the string to return when there is not enough data for the desired computation.
-
-        :param str not_enough_data_string: The string to return when there is not enough data for the desired computation.
-
-        :rtype: None
-        """
-        self.not_enough_data_string = not_enough_data_string
 
 
 @validate_call
