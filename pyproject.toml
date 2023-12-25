@@ -20,5 +20,5 @@ dependencies = [
 [project.urls]
 homepage = "https://github.com/nimaid/python-etatime"
 repository = "https://github.com/nimaid/python-etatime"
-documentation = "https://python-etatime.readthedocs.io/en/latest/index.html"
+documentation = "https://etatime.readthedocs.io/en/latest/index.html"
 issues = "https://github.com/nimaid/python-etatime/issues"
