@@ -151,7 +151,7 @@ class Eta:
     def string(self, field: Value) -> str:
         """Convert a specific field of this object into a human-readable string.
 
-        :param StringField field: The specific field to convert to a string.
+        :param Field field: The specific field to convert to a string.
 
         :return: The human-readable string for the specified field.
         :rtype: str
