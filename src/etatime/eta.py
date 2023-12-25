@@ -1,4 +1,5 @@
 """Provides tools for tracking, computing, and formatting time estimates."""
+import sys
 import datetime
 from enum import Enum
 from typing import Any, Annotated, Iterator, Sequence
@@ -421,7 +422,8 @@ def eta_bar(
         percent_decimals: NonNegativeInt = EtaDefaults.percent_completion,
         not_enough_data_string: str = EtaDefaults.not_enough_data_string,
         sep: str = EtaDefaults.sep,
-        width: PositiveInt = CompletionDefaults.width
+        width: PositiveInt = CompletionDefaults.width,
+        output = sys.stdout
 ) -> Iterator[Any]:
     if start_time is None:
         start_time = datetime.datetime.now()
@@ -435,6 +437,7 @@ def eta_bar(
     )
 
     eta = None
+    last_message_length = 0
     try:
         for i, item in enumerate(items):
                 eta = calculator.get_eta(i)
@@ -444,8 +447,14 @@ def eta_bar(
                 ).bar(
                     width=width
                 )
-                print(f"{bar} {eta.progress_string(sep=sep)}", end="\r")
 
+                message = f"{bar} {eta.progress_string(sep=sep)}"
+                output.write(" " * last_message_length)
+                output.write("\r")
+                output.write(message)
+                output.write("\r")
+
+                last_message_length = len(message)
                 yield item
     finally:
         # TODO: Print completion, time taken, and completion time
@@ -469,4 +478,5 @@ def eta_bar(
         completion_string = eta.string(eta.Value.COMPLETION)
 
         end_stats_string = sep.join([completion_string, time_taken_string, end_time_string])
-        print(f"{bar} {end_stats_string}")
+        output.write(f"{bar} {end_stats_string}")
+        output.write("\n")
