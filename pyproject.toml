@@ -14,7 +14,7 @@ authors = [
 
 classifiers = []
 dependencies = [
-    "pydantic"
+    "pydantic >=2.0"
 ]
 
 [project.urls]
