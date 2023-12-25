@@ -1,8 +1,6 @@
 # ETA Time
 ### A library for tracking, computing, and formatting time estimates in Python.
 
-<p align="center"><a href="https://pypi.org/project/etatime/"><img src="https://pypi.org/static/images/logo-large.9f732b5f.svg" width="200px" alt="etatime on Pypi"></a></p>
-
 ## Basic Usage
 ```python
 import time, random
