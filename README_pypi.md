@@ -17,7 +17,6 @@ for item, eta in eta_calculator(range(10)):  # Creates a new Eta object for each
     process_item(item)  # Do your processing here
 ```
 If you want to access the eta stats outside the loop, you can use this pattern to do so:
-
 ```python
 eta = None  # Initialize the eta variable here, so we can use it outside the loop
 for item, eta in eta_calculator(range(10)):
@@ -27,7 +26,6 @@ eta.complete()  # Update the last Eta object to completed, using now as the end 
 
 print(f"Done processing {eta.total_items} items in {eta.string(eta.StringField.TIME_TAKEN)}!\n")
 ```
-
 Here is an example of the sort of output this produces:
 ```
 0.00%
@@ -44,7 +42,6 @@ Done processing 10 items in 0:01:33!
 ```
 
 You can get more verbose information by replacing the for loop with this:
-
 ```python
 for item, eta in eta_calculator(range(10), verbose=True):
 ```
@@ -64,7 +61,6 @@ Done processing 10 items in 1 minute and 51 seconds!
 ```
 
 You can also build a custom message piece-by-piece, like so:
-
 ```python
 print(f"Processing item: '{item}'")
 print(f"  Completed: {eta.string(eta.Value.COMPLETION)}")
@@ -125,6 +121,35 @@ Processing item: '9'
   Time remaining: 12 seconds
   ETA: 12:29:41 AM US Mountain Standard Time
 Done processing 10 items in 1 minute and 57 seconds!
+```
+
+You can also make a progress bar similar to how you would with tqdm:
+```python
+import time, random
+from etatime.eta import eta_bar
+
+
+# Just a placeholder function that takes a random amount of time
+def process_item(item):
+    time.sleep(random.random() * 20)
+
+
+for item in eta_bar(range(10), verbose=True, width=40):  # Updates the progress bar each loop
+    process_item(item)  # Do your processing here
+```
+Which gives the following output (on a single line):
+```
+                                         0.00% (0/10)
+████                                     10.00% (1/10) | Time remaining: 33 seconds | ETA: 10:20:59 AM US Mountain Standard Time
+████████▏                                20.00% (2/10) | Time remaining: 34 seconds | ETA: 10:21:06 AM US Mountain Standard Time
+████████████▍                            30.00% (3/10) | Time remaining: 43 seconds | ETA: 10:21:25 AM US Mountain Standard Time
+████████████████▌                        40.00% (4/10) | Time remaining: 54 seconds | ETA: 10:21:54 AM US Mountain Standard Time
+████████████████████▋                    50.00% (5/10) | Time remaining: 42 seconds | ETA: 10:21:48 AM US Mountain Standard Time
+████████████████████████▋                60.00% (6/10) | Time remaining: 29 seconds | ETA: 10:21:37 AM US Mountain Standard Time
+████████████████████████████▊            70.00% (7/10) | Time remaining: 26 seconds | ETA: 10:21:50 AM US Mountain Standard Time
+████████████████████████████████▉        80.00% (8/10) | Time remaining: 15 seconds | ETA: 10:21:42 AM US Mountain Standard Time
+█████████████████████████████████████    90.00% (9/10) | Time remaining: 7 seconds | ETA: 10:21:40 AM US Mountain Standard Time
+████████████████████████████████████████  100.00% (10/10) | Time taken: 1 minute and 12 seconds | Completion time: 10:20:23 AM US Mountain Standard Time
 ```
 
 # Full Documentation

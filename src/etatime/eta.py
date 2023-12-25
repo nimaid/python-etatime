@@ -2,10 +2,11 @@
 import datetime
 from enum import Enum
 from typing import Any, Annotated, Iterator, Sequence
-from pydantic import NonNegativeInt, Field, validate_call
+from pydantic import NonNegativeInt, PositiveInt, Field, validate_call
 
+from etatime.completion import Completion
 from etatime.time import TimeString
-from etatime.constants import EtaDefaults
+from etatime.constants import EtaDefaults, CompletionDefaults
 
 
 class Eta:
@@ -50,7 +51,7 @@ class Eta:
             start_time: datetime.datetime,
             current_time: datetime.datetime = None,
             verbose: bool = EtaDefaults.verbose,
-            percent_decimals: NonNegativeInt = EtaDefaults.percent_decimals,
+            percent_decimals: NonNegativeInt = EtaDefaults.percent_completion,
             not_enough_data_string: str = EtaDefaults.not_enough_data_string
     ):
         if current_time is None:
@@ -65,7 +66,6 @@ class Eta:
         self.not_enough_data_string = not_enough_data_string
 
         self._validate_item_index(self.item_index)
-        self.percent_format = f"{{:.{self.percent_decimals}f}}%"
 
         self.eta = self._eta()
         self.time_remaining = self._time_remaining()
@@ -137,7 +137,10 @@ class Eta:
         :return: The completion percentage as a float in range on 0.0 - 1.0.
         :rtype: float
         """
-        return self.item_index / self.total_items
+        return Completion(
+                    total=self.total_items,
+                    index=self.item_index
+                ).value()
 
     def _time_taken(self) -> datetime.timedelta:
         """Compute the time taken and return it as a datetime.timedelta object.
@@ -189,9 +192,13 @@ class Eta:
                         verbose=self.verbose
                     )
             case self.Value.COMPLETION:
-                field_string = self.percent_format.format(self.completion * 100)
-                if self.verbose:
-                    field_string += f" ({self.item_index}/{self.total_items})"
+                field_string = Completion(
+                    total=self.total_items,
+                    index=self.item_index
+                ).string(
+                    decimals=self.percent_decimals,
+                    verbose=self.verbose
+                )
             case self.Value.TOTAL_ITEMS:
                 field_string = str(self.total_items)
             case self.Value.ITEM_INDEX:
@@ -311,7 +318,7 @@ class EtaCalculator:
             total_items: Annotated[NonNegativeInt, Field(gt=1)],
             start_time: datetime.datetime = None,
             verbose: bool = EtaDefaults.verbose,
-            percent_decimals: NonNegativeInt = EtaDefaults.percent_decimals,
+            percent_decimals: NonNegativeInt = EtaDefaults.percent_completion,
             not_enough_data_string: str = EtaDefaults.not_enough_data_string
     ):
         if start_time is None:
@@ -377,7 +384,7 @@ def eta_calculator(
         items: Sequence[Any],
         start_time: datetime.datetime = None,
         verbose: bool = EtaDefaults.verbose,
-        percent_decimals: NonNegativeInt = EtaDefaults.percent_decimals,
+        percent_decimals: NonNegativeInt = EtaDefaults.percent_completion,
         not_enough_data_string: str = EtaDefaults.not_enough_data_string
 ) -> Iterator[tuple[Any, Eta]]:
     """A generator that iterates over the items in a sequence and returns the items in addition to an Eta object.
@@ -404,3 +411,62 @@ def eta_calculator(
 
     for i, item in enumerate(items):
         yield item, calculator.get_eta(i)
+
+
+@validate_call
+def eta_bar(
+        items: Sequence[Any],
+        start_time: datetime.datetime = None,
+        verbose: bool = EtaDefaults.verbose,
+        percent_decimals: NonNegativeInt = EtaDefaults.percent_completion,
+        not_enough_data_string: str = EtaDefaults.not_enough_data_string,
+        sep: str = EtaDefaults.sep,
+        width: PositiveInt = CompletionDefaults.width
+) -> Iterator[Any]:
+    if start_time is None:
+        start_time = datetime.datetime.now()
+
+    calculator = EtaCalculator(
+        total_items=len(items),
+        start_time=start_time,
+        verbose=verbose,
+        percent_decimals=percent_decimals,
+        not_enough_data_string=not_enough_data_string
+    )
+
+    eta = None
+    try:
+        for i, item in enumerate(items):
+                eta = calculator.get_eta(i)
+                bar = Completion(
+                    total=eta.total_items,
+                    index=eta.item_index
+                ).bar(
+                    width=width
+                )
+                print(f"{bar} {eta.progress_string(sep=sep)}", end="\r")
+
+                yield item
+    finally:
+        # TODO: Print completion, time taken, and completion time
+        eta.complete()
+        bar = Completion(
+            total=eta.total_items,
+            index=eta.item_index
+        ).bar(
+            width=width
+        )
+
+        time_taken_string = eta.string(eta.Value.TIME_TAKEN)
+        end_time_string = eta.string(eta.Value.CURRENT_TIME)
+        if verbose:
+            time_taken_string = f"Time taken: {time_taken_string}"
+            end_time_string = f"Completion time: {end_time_string}"
+        else:
+            time_taken_string = f"T: {time_taken_string}"
+            end_time_string = f"C: {end_time_string}"
+
+        completion_string = eta.string(eta.Value.COMPLETION)
+
+        end_stats_string = sep.join([completion_string, time_taken_string, end_time_string])
+        print(f"{bar} {end_stats_string}")

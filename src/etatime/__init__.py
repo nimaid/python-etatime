@@ -1,7 +1,7 @@
 """A library for tracking, computing, and formatting time estimates."""
 
-__version__ = "2.7.2"
+__version__ = "2.7.3"
 
 from . import eta, time, constants
 
-# TODO: Add eta_bar() wrapper for eta_calc()
+# TODO: Break out sep param where needed.
