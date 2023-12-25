@@ -1,5 +1,5 @@
 # ETA Time
-### A library for tracking, computing, and formatting time estimates in Python.
+### A library for tracking, computing, and formatting time estimates.
 
 ## Basic Usage
 ```python
