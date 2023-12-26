@@ -34,14 +34,14 @@ class Validate:
             raise ValidationError(f"Value '{value}' must not be negative")
 
     @staticmethod
-    def range_inclusive(value: int | float, min: int | float, max: int | float) -> None:
-        if value < min or value > max:
-            raise ValidationError(f"Value '{value}' must be between {min} and {max} (inclusive)")
+    def range_inclusive(value: int | float, minimum: int | float, maximum: int | float) -> None:
+        if value < minimum or value > maximum:
+            raise ValidationError(f"Value '{value}' must be between {minimum} and {maximum} (inclusive)")
 
     @staticmethod
-    def range_non_inclusive(value: int | float, min: int | float, max: int | float) -> None:
-        if value <= min or value >= max:
-            raise ValidationError(f"Value '{value}' must be between {min} and {max} (non-inclusive)")
+    def range_non_inclusive(value: int | float, minimum: int | float, maximum: int | float) -> None:
+        if value <= minimum or value >= maximum:
+            raise ValidationError(f"Value '{value}' must be between {minimum} and {maximum} (non-inclusive)")
 
     @staticmethod
     def gt(first: int | float, second: int | float) -> None:

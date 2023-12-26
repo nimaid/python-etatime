@@ -531,7 +531,7 @@ class eta_bar:
     ):
         if overwrite:
             print("", end=f"\r{value}", file=self.file)
-            #print(value, file=self.file)
+            # print(value, file=self.file)
         else:
             print(value, file=self.file)
 
@@ -584,7 +584,7 @@ class eta_bar:
 
             return self.items[index]
 
-        self.eta.complete()
+        self.complete()
 
         bar = self.bar(index)
         time_taken_string = self.eta.string(self.eta.Value.TIME_TAKEN)

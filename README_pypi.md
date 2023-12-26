@@ -16,7 +16,6 @@ def process_item(item):
 for item in (calc := eta_calculator(range(10))):  # Creates a `calc` object that tracks the progress
     print(calc.eta)  # Print the current progress stats
     process_item(item)  # Do your processing here
-calc.complete()  # Update the last Eta object to completed, using now as the end time
 
 print(f"Done processing {calc.eta.total_items} items in {calc.eta.string(calc.eta.Value.TIME_TAKEN)}!\n")
 ```
@@ -131,6 +130,8 @@ def process_item(item):
 
 for item in (pbar := eta_bar(range(10), verbose=True, width=12, file=sys.stdout)):  # Updates the progress bar each loop
     process_item(item)  # Do your processing here
+
+print(f"Done processing {pbar.eta.total_items} items in {pbar.eta.string(pbar.eta.Value.TIME_TAKEN)}!\n")
 ```
 Which gives the following output (on a single line):
 ```
