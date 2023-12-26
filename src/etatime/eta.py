@@ -449,9 +449,12 @@ class eta_bar:
     def write(
             self,
             value,
-            end="\n"
+            overwrite=False
     ):
-        print(value, end=end, file=self.file, flush=True)
+        if overwrite:
+            print("", end=f"\r{value}", file=self.file)
+        else:
+            print(value, file=self.file)
 
     def __iter__(self):
         self.eta = None
@@ -473,8 +476,8 @@ class eta_bar:
             )
 
             message = f"|{bar}| {self.eta.progress_string(sep=self.sep)}"
-            self.write(" " * self.last_message_length, end="\r")
-            self.write(message, end="\r")
+            self.write(" " * self.last_message_length, overwrite=True)
+            self.write(message, overwrite=True)
 
             self.last_message_length = len(message)
             self.last_message_index = index
@@ -501,6 +504,6 @@ class eta_bar:
         completion_string = self.eta.string(self.eta.Value.COMPLETION)
 
         end_stats_string = self.sep.join([completion_string, time_taken_string, end_time_string])
-        self.write(f"{bar} {end_stats_string}")
+        self.write(f"{bar} {end_stats_string}\n", overwrite=True)
 
         raise StopIteration
