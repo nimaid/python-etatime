@@ -37,7 +37,7 @@ class Completion:
 
     def string(
             self,
-            decimals=EtaDefaults.percent_completion,
+            decimals=EtaDefaults.percent_completion_decimals,
             verbose=EtaDefaults.verbose
     ) -> str:
         percent = self.value()

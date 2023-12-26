@@ -52,7 +52,7 @@ class Eta:
             start_time: datetime.datetime,
             current_time: datetime.datetime = None,
             verbose: bool = EtaDefaults.verbose,
-            percent_decimals: int = EtaDefaults.percent_completion,
+            percent_decimals: int = EtaDefaults.percent_completion_decimals,
             not_enough_data_string: str = EtaDefaults.not_enough_data_string
     ):
         Validate.gte(total_items, 2)
@@ -335,7 +335,7 @@ class EtaCalculator:
             total_items: int,
             start_time: datetime.datetime = None,
             verbose: bool = EtaDefaults.verbose,
-            percent_decimals: int = EtaDefaults.percent_completion,
+            percent_decimals: int = EtaDefaults.percent_completion_decimals,
             not_enough_data_string: str = EtaDefaults.not_enough_data_string
     ):
         Validate.gte(total_items, 2)
@@ -438,7 +438,7 @@ class eta_calculator:
             items: Sequence[Any],
             start_time: datetime.datetime = None,
             verbose: bool = EtaDefaults.verbose,
-            percent_decimals: int = EtaDefaults.percent_completion,
+            percent_decimals: int = EtaDefaults.percent_completion_decimals,
             not_enough_data_string: str = EtaDefaults.not_enough_data_string,
             sep: str = EtaDefaults.sep
     ):
@@ -498,7 +498,7 @@ class eta_bar:
             items: Sequence[Any],
             start_time: datetime.datetime = None,
             verbose: bool = EtaDefaults.verbose,
-            percent_decimals: int = EtaDefaults.percent_completion,
+            percent_decimals: int = EtaDefaults.percent_completion_decimals,
             not_enough_data_string: str = EtaDefaults.not_enough_data_string,
             sep: str = EtaDefaults.sep,
             width: int = CompletionDefaults.width,
