@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from etatime.constants import TimeDefaults
 from etatime.onecondition import Validate
 
+
 @dataclass
 class SplitTime:
     """Data class for holding split time values."""
