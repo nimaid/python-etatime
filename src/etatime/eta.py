@@ -493,8 +493,9 @@ class eta_bar:
 
             return self.items[index]
 
-        bar = self.bar(index)
+        self.eta.complete()
 
+        bar = self.bar(index)
         time_taken_string = self.eta.string(self.eta.Value.TIME_TAKEN)
         end_time_string = self.eta.string(self.eta.Value.CURRENT_TIME)
         if self.verbose:
