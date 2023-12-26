@@ -456,6 +456,20 @@ class eta_bar:
         else:
             print(value, file=self.file)
 
+    def bar(
+            self,
+            index
+    ):
+        bar = Completion(
+            total=self.eta.total_items,
+            index=index
+        ).bar(
+            width=self.width
+        )
+        bar = f"|{bar}|"
+
+        return bar
+
     def __iter__(self):
         self.eta = None
         self.total_items = len(self.items)
@@ -468,14 +482,9 @@ class eta_bar:
         index = self.last_message_index + 1
         if index < self.total_items:
             self.eta = self.calculator.get_eta(index)
-            bar = Completion(
-                total=self.eta.total_items,
-                index=self.eta.item_index
-            ).bar(
-                width=self.width
-            )
+            bar = self.bar(index)
 
-            message = f"|{bar}| {self.eta.progress_string(sep=self.sep)}"
+            message = f"{bar} {self.eta.progress_string(sep=self.sep)}"
             self.write(" " * self.last_message_length, overwrite=True)
             self.write(message, overwrite=True)
 
@@ -484,13 +493,7 @@ class eta_bar:
 
             return self.items[index]
 
-        self.eta.complete()
-        bar = Completion(
-            total=self.eta.total_items,
-            index=self.eta.item_index
-        ).bar(
-            width=self.width
-        )
+        bar = self.bar(index)
 
         time_taken_string = self.eta.string(self.eta.Value.TIME_TAKEN)
         end_time_string = self.eta.string(self.eta.Value.CURRENT_TIME)
