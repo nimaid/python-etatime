@@ -7,7 +7,7 @@ from typing import Any, Iterator, Sequence
 from etatime.completion import Completion
 from etatime.time import TimeString
 from etatime.constants import EtaDefaults, CompletionDefaults
-from etatime.validate import Validate
+from etatime.onecondition import Validate
 
 
 class EtaValue(Enum):
@@ -97,13 +97,11 @@ class Eta:
             self,
             item_index: int
     ) -> None:
-        """Validate that an index is not larger than the total items and raise an IndexError otherwise.
-
-        Index type and positivity are not validated in this private method because pydantic handles it elsewhere.
+        """Validate that an index is not larger than the total items.
 
         :param int item_index: The index to test.
 
-        :raises IndexError: Raised when the index is too large.
+        :raises ValidationError: Raised when the index is too large.
 
         :rtype: None
         """
@@ -229,7 +227,7 @@ class Eta:
         :param str sep: The string to use as a seperator between fields.
         :param bool verbose: If set, override the default verbosity.
 
-        :raises pydantic.ValidationError: Raised when a parameter is invalid.
+        :raises ValidationError: Raised when a parameter is invalid.
 
         :return: A human-readable string that includes (in order) completion, time remaining, and ETA.
         :rtype: str
@@ -263,7 +261,7 @@ class Eta:
         :param str sep: The string to use as a seperator between fields.
         :param bool verbose: If set, override the default verbosity.
 
-        :raises pydantic.ValidationError: Raised when a parameter is invalid.
+        :raises ValidationError: Raised when a parameter is invalid.
 
         :return: A human-readable string that includes all useful statistics about this object.
         :rtype: str
@@ -328,7 +326,7 @@ class EtaCalculator:
     :ivar int percent_decimals: The number of decimal places to use in the percentage string.
     :ivar str not_enough_data_string: The string to return when there is not enough data for the desired computation.
 
-    :raises pydantic.ValidationError: Raised when a parameter is invalid.
+    :raises ValidationError: Raised when a parameter is invalid.
     """
     def __init__(
             self,

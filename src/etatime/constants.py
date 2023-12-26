@@ -18,6 +18,7 @@ class TimeDefaults:
     """The defaults to use for the `time` submodule."""
     unknown_format_string: ClassVar[str] = "unknown time format"
 
+
 @dataclass
 class CompletionDefaults:
     """The defaults to use for the `completion` submodule."""

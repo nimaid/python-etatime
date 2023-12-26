@@ -1,12 +1,13 @@
 """A library for tracking, computing, and formatting time estimates."""
 
-__version__ = "2.8.2"
+__version__ = "2.8.3"
 
-from . import eta, time, completion, constants, validate
+from . import eta, time, completion, constants, onecondition
 
+# TODO: Make updated template from this project
+# TODO: Make separate `onecondition` python module for validate.py
 # TODO: Add annotations everywhere
-# TODO: Update raises docstrings for all validate calls
-# TODO: Finish adding docstrings and function annotations
+# TODO: Finish adding docstrings
 # TODO: Add doctest strings
 # TODO: Add comprehensive unit tests
 # TODO: Integration tests

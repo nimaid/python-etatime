@@ -3,7 +3,7 @@ import datetime
 from dataclasses import dataclass
 
 from etatime.constants import TimeDefaults
-from etatime.validate import Validate
+from etatime.onecondition import Validate
 
 @dataclass
 class SplitTime:
@@ -246,4 +246,4 @@ class TimeString:
 
             return TimeString.TimeDelta.short(time_in)
 
-        return TimeDefaults.unknown_format_string  # Should never be called because pydantic validated the types
+        return TimeDefaults.unknown_format_string
