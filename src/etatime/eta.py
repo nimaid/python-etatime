@@ -349,6 +349,9 @@ class EtaCalculator:
         self.percent_decimals = percent_decimals
         self.not_enough_data_string = not_enough_data_string
 
+        self.eta = None
+        self.update_eta(item_index=0, current_time=start_time)
+
     def __str__(self) -> str:
         """Return the string format of this ETA calculator object.
 
@@ -368,28 +371,26 @@ class EtaCalculator:
         """
         return self.__str__()
 
-    def get_eta(
+    def update_eta(
             self,
             item_index: int,
             current_time: datetime.datetime = None
-    ) -> Eta:
-        """Get the current ETA calculation and return it as an Eta object.
+    ) -> None:
+        """Get the current ETA calculation and set self.eta to it.
 
         :param int item_index: The index of the item about to be processed (0-indexed).
         :param datetime.datetime current_time: The time to use for the computation, defaults to the current time.
 
-        :raises pydantic.ValidationError: Raised when a parameter is invalid.
-        :raises IndexError: Raised when the index is too large.
+        :raises ValidationError: Raised when a parameter is invalid.
 
-        :return: The current ETA calculation as an Eta object.
-        :rtype: Eta
+        :rtype: None
         """
-        Validate.non_negative(item_index)
+        Validate.range_inclusive(item_index, 0, self.total_items - 1)
 
         if current_time is None:
             current_time = datetime.datetime.now()
 
-        return Eta(
+        self.eta = Eta(
             total_items=self.total_items,
             item_index=item_index,
             start_time=self.start_time,
@@ -398,15 +399,28 @@ class EtaCalculator:
             percent_decimals=self.percent_decimals
         )
 
+    def complete(
+            self,
+            current_time: datetime.datetime = None
+    ) -> None:
+        if current_time is None:
+            current_time = datetime.datetime.now()
 
-def eta_calculator(
-        items: Sequence[Any],
-        start_time: datetime.datetime = None,
-        verbose: bool = EtaDefaults.verbose,
-        percent_decimals: int = EtaDefaults.percent_completion,
-        not_enough_data_string: str = EtaDefaults.not_enough_data_string
-) -> Iterator[tuple[Any, Eta]]:
-    """A generator that iterates over the items in a sequence and returns the items in addition to an Eta object.
+        if self.eta is not None:
+            self.eta.complete()
+        else:
+            self.eta = Eta(
+            total_items=self.total_items,
+            item_index=self.total_items - 1,
+            start_time=self.start_time,
+            current_time=current_time,
+            verbose=self.verbose,
+            percent_decimals=self.percent_decimals
+        )
+
+
+class eta_calculator:
+    """Decorates an iterable and returns an identical iterator, but with progress tracking.
 
     :param Sequence[Any] items: The sequence to iterate over.
     :param datetime.datetime start_time: The starting time to use for the computation, defaults to now.
@@ -414,24 +428,67 @@ def eta_calculator(
     :param int percent_decimals: The number of decimal places to use in the percentage string.
     :param str not_enough_data_string: The string to return when there is not enough data for the desired computation.
 
-    :return: An iterator with a tuple of the current item and the computed Eta object.
-    :rtype: Iterator[tuple[Any, Eta]]
+    :return: an identical iterator, but with progress tracking in the computed self.eta attribute.
+    :rtype: Iterator[Any]
     """
-    Validate.non_negative(percent_decimals)
+    def __init__(
+            self,
+            items: Sequence[Any],
+            start_time: datetime.datetime = None,
+            verbose: bool = EtaDefaults.verbose,
+            percent_decimals: int = EtaDefaults.percent_completion,
+            not_enough_data_string: str = EtaDefaults.not_enough_data_string,
+            sep: str = EtaDefaults.sep
+    ):
+        Validate.non_negative(percent_decimals)
 
-    if start_time is None:
-        start_time = datetime.datetime.now()
+        if start_time is None:
+            start_time = datetime.datetime.now()
 
-    calculator = EtaCalculator(
-        total_items=len(items),
-        start_time=start_time,
-        verbose=verbose,
-        percent_decimals=percent_decimals,
-        not_enough_data_string=not_enough_data_string,
-    )
+        self.items = items
+        self.start_time = start_time
+        self.verbose = verbose
+        self.sep = sep
 
-    for i, item in enumerate(items):
-        yield item, calculator.get_eta(i)
+        self.calculator = EtaCalculator(
+            total_items=len(items),
+            start_time=start_time,
+            verbose=verbose,
+            percent_decimals=percent_decimals,
+            not_enough_data_string=not_enough_data_string,
+        )
+
+        self.eta = self.calculator.eta
+
+    def complete(
+            self,
+            current_time: datetime.datetime = None
+    ) -> None:
+        if current_time is None:
+            current_time = datetime.datetime.now()
+
+        if self.eta is not None:
+            self.eta.complete(current_time=current_time)
+
+    def __iter__(self):
+        self.total_items = len(self.items)
+        self.last_index = -1
+
+        return self
+
+    def __next__(self):
+        index = self.last_index + 1
+        if index < self.total_items:
+            self.calculator.update_eta(index)
+            self.eta = self.calculator.eta
+
+            self.last_index = index
+
+            return self.items[index]
+
+        self.complete()
+
+        raise StopIteration
 
 
 class eta_bar:
@@ -455,7 +512,6 @@ class eta_bar:
         self.items = items
         self.start_time = start_time
         self.verbose = verbose
-        self.percent_decimals = percent_decimals
         self.sep = sep
         self.width = width
         self.file = file
@@ -493,18 +549,30 @@ class eta_bar:
 
         return bar
 
+    def complete(
+            self,
+            current_time: datetime.datetime = None
+    ) -> None:
+        if current_time is None:
+            current_time = datetime.datetime.now()
+
+        if self.eta is not None:
+            self.eta.complete(current_time=current_time)
+
     def __iter__(self):
-        self.eta = None
+        self.eta = self.calculator.eta
         self.total_items = len(self.items)
         self.last_message_length = 0
-        self.last_message_index = -1
+        self.last_index = -1
 
         return self
 
     def __next__(self) -> Iterator[Any]:
-        index = self.last_message_index + 1
+        index = self.last_index + 1
         if index < self.total_items:
-            self.eta = self.calculator.get_eta(index)
+            self.calculator.update_eta(index)
+            self.eta =  self.calculator.eta
+
             bar = self.bar(index)
 
             message = f"{bar} {self.eta.progress_string(sep=self.sep)}"
@@ -512,7 +580,7 @@ class eta_bar:
             self.write(message, overwrite=True)
 
             self.last_message_length = len(message)
-            self.last_message_index = index
+            self.last_index = index
 
             return self.items[index]
 

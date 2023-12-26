@@ -19,19 +19,12 @@ def process_item(item):
     time.sleep(random.random() * 20)
 
 
-for item, eta in eta_calculator(range(10)):  # Creates a new Eta object for each item
-    print(eta)  # Print the current progress stats
+for item in (calc := eta_calculator(range(10))):  # Creates a `calc` object that tracks the progress
+    print(calc.eta)  # Print the current progress stats
     process_item(item)  # Do your processing here
-```
-If you want to access the eta stats outside the loop, you can use this pattern to do so:
-```python
-eta = None  # Initialize the eta variable here, so we can use it outside the loop
-for item, eta in eta_calculator(range(10)):
-    print(eta)
-    process_item(item)
-eta.complete()  # Update the last Eta object to completed, using now as the end time
+calc.complete()  # Update the last Eta object to completed, using now as the end time
 
-print(f"Done processing {eta.total_items} items in {eta.string(eta.StringField.TIME_TAKEN)}!\n")
+print(f"Done processing {calc.eta.total_items} items in {calc.eta.string(calc.eta.Value.TIME_TAKEN)}!\n")
 ```
 Here is an example of the sort of output this produces:
 ```
@@ -50,7 +43,7 @@ Done processing 10 items in 0:01:33!
 
 You can get more verbose information by replacing the for loop with this:
 ```python
-for item, eta in eta_calculator(range(10), verbose=True):
+for item in (calc := eta_calculator(range(10), verbose=True)):
 ```
 Here is an example of the verbose output:
 ```
@@ -70,10 +63,10 @@ Done processing 10 items in 1 minute and 51 seconds!
 You can also build a custom message piece-by-piece, like so:
 ```python
 print(f"Processing item: '{item}'")
-print(f"  Completed: {eta.string(eta.Value.COMPLETION)}")
-print(f"  Time taken: {eta.string(eta.Value.TIME_TAKEN)}")
-print(f"  Time remaining: {eta.string(eta.Value.TIME_REMAINING)}")
-print(f"  ETA: {eta.string(eta.Value.ETA)}")
+print(f"  Completed: {calc.eta.string(calc.eta.Value.COMPLETION)}")
+print(f"  Time taken: {calc.eta.string(calc.eta.Value.TIME_TAKEN)}")
+print(f"  Time remaining: {calc.eta.string(calc.eta.Value.TIME_REMAINING)}")
+print(f"  ETA: {calc.eta.string(calc.eta.Value.ETA)}")
 ```
 This produces the following output:
 ```
@@ -142,7 +135,7 @@ def process_item(item):
     time.sleep(random.random() * 20)
 
 
-for item in eta_bar(range(10), verbose=True, width=12, file=sys.stdout):  # Updates the progress bar each loop
+for item in (pbar := eta_bar(range(10), verbose=True, width=12, file=sys.stdout)):  # Updates the progress bar each loop
     process_item(item)  # Do your processing here
 ```
 Which gives the following output (on a single line):
@@ -159,11 +152,11 @@ Which gives the following output (on a single line):
 |██████████▉ | 90.00% (9/10) | Time remaining: 13 seconds | ETA: 9:47:50 PM US Mountain Standard Time
 |████████████| 100.00% (10/10) | Time taken: 2 minutes and 16 seconds | Completion time: 9:45:32 PM US Mountain Standard Time
 ```
-You can even access eta variables inside the loop by using the [walrus operator](https://docs.python.org/3/whatsnew/3.8.html#assignment-expressions):
+You can even access eta variables inside the for loop by using the [walrus operator](https://docs.python.org/3/whatsnew/3.8.html#assignment-expressions):
 ```python
-for item in (pbar := eta_bar(range(10))):  # This makes a new pbar object
+for item in (pbar := eta_bar(range(10), verbose=False)):  # This makes a new non-verbose progress bar
+    long_progress_string = pbar.eta.progress_string(verbose=True)  # Use the eta variables elsewhere
     process_item(item)
-    long_progress_string = pbar.eta.progress_string(verbose=True)  # Use the variables elsewhere
     ...
 ```
 
