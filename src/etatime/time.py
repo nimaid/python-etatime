@@ -36,11 +36,11 @@ def split_seconds(seconds_in: int | float) -> SplitTime:
     milliseconds = (remainder % 1) * 1000
 
     return SplitTime(
-        weeks=weeks,
-        days=days,
-        hours=hours,
-        minutes=minutes,
-        seconds=seconds,
+        weeks=int(weeks),
+        days=int(days),
+        hours=int(hours),
+        minutes=int(minutes),
+        seconds=int(seconds),
         milliseconds=milliseconds
     )
 

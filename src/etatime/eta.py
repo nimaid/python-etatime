@@ -2,12 +2,12 @@
 import sys
 import datetime
 from enum import Enum
-from typing import Any, Annotated, Iterator, Sequence
+from typing import Any, Iterator, Sequence
 
 from etatime.completion import Completion
 from etatime.time import TimeString
 from etatime.constants import EtaDefaults, CompletionDefaults
-from etatime.validate import Validate, ValidationError
+from etatime.validate import Validate
 
 
 class Eta:
@@ -329,15 +329,17 @@ class EtaCalculator:
 
     :raises pydantic.ValidationError: Raised when a parameter is invalid.
     """
-    @validate_call
     def __init__(
             self,
-            total_items: Annotated[NonNegativeInt, Field(gt=1)],
+            total_items: int,
             start_time: datetime.datetime = None,
             verbose: bool = EtaDefaults.verbose,
-            percent_decimals: NonNegativeInt = EtaDefaults.percent_completion,
+            percent_decimals: int = EtaDefaults.percent_completion,
             not_enough_data_string: str = EtaDefaults.not_enough_data_string
     ):
+        Validate.gte(total_items, 2)
+        Validate.non_negative(percent_decimals)
+
         if start_time is None:
             start_time = datetime.datetime.now()
 
@@ -366,10 +368,9 @@ class EtaCalculator:
         """
         return self.__str__()
 
-    @validate_call
     def get_eta(
             self,
-            item_index: NonNegativeInt,
+            item_index: int,
             current_time: datetime.datetime = None
     ) -> Eta:
         """Get the current ETA calculation and return it as an Eta object.
@@ -383,6 +384,8 @@ class EtaCalculator:
         :return: The current ETA calculation as an Eta object.
         :rtype: Eta
         """
+        Validate.non_negative(item_index)
+
         if current_time is None:
             current_time = datetime.datetime.now()
 
@@ -396,12 +399,11 @@ class EtaCalculator:
         )
 
 
-@validate_call
 def eta_calculator(
         items: Sequence[Any],
         start_time: datetime.datetime = None,
         verbose: bool = EtaDefaults.verbose,
-        percent_decimals: NonNegativeInt = EtaDefaults.percent_completion,
+        percent_decimals: int = EtaDefaults.percent_completion,
         not_enough_data_string: str = EtaDefaults.not_enough_data_string
 ) -> Iterator[tuple[Any, Eta]]:
     """A generator that iterates over the items in a sequence and returns the items in addition to an Eta object.
@@ -415,6 +417,8 @@ def eta_calculator(
     :return: An iterator with a tuple of the current item and the computed Eta object.
     :rtype: Iterator[tuple[Any, Eta]]
     """
+    Validate.non_negative(percent_decimals)
+
     if start_time is None:
         start_time = datetime.datetime.now()
 
@@ -431,18 +435,20 @@ def eta_calculator(
 
 
 class eta_bar:
-    @validate_call
     def __init__(
             self,
             items: Sequence[Any],
             start_time: datetime.datetime = None,
             verbose: bool = EtaDefaults.verbose,
-            percent_decimals: NonNegativeInt = EtaDefaults.percent_completion,
+            percent_decimals: int = EtaDefaults.percent_completion,
             not_enough_data_string: str = EtaDefaults.not_enough_data_string,
             sep: str = EtaDefaults.sep,
-            width: PositiveInt = CompletionDefaults.width,
+            width: int = CompletionDefaults.width,
             file = sys.stderr
     ):
+        Validate.non_negative(percent_decimals)
+        Validate.positive(width)
+
         if start_time is None:
             start_time = datetime.datetime.now()
 
@@ -491,7 +497,7 @@ class eta_bar:
         self.eta = None
         self.total_items = len(self.items)
         self.last_message_length = 0
-        self.last_message_index = 0
+        self.last_message_index = -1
 
         return self
 

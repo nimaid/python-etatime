@@ -142,22 +142,29 @@ def process_item(item):
     time.sleep(random.random() * 20)
 
 
-for item in eta_bar(range(10), verbose=True, width=10, file=sys.stdout):  # Updates the progress bar each loop
+for item in eta_bar(range(10), verbose=True, width=12, file=sys.stdout):  # Updates the progress bar each loop
     process_item(item)  # Do your processing here
 ```
 Which gives the following output (on a single line):
 ```
-                                         0.00% (0/10)
-████                                     10.00% (1/10) | Time remaining: 33 seconds | ETA: 10:20:59 AM US Mountain Standard Time
-████████▏                                20.00% (2/10) | Time remaining: 34 seconds | ETA: 10:21:06 AM US Mountain Standard Time
-████████████▍                            30.00% (3/10) | Time remaining: 43 seconds | ETA: 10:21:25 AM US Mountain Standard Time
-████████████████▌                        40.00% (4/10) | Time remaining: 54 seconds | ETA: 10:21:54 AM US Mountain Standard Time
-████████████████████▋                    50.00% (5/10) | Time remaining: 42 seconds | ETA: 10:21:48 AM US Mountain Standard Time
-████████████████████████▋                60.00% (6/10) | Time remaining: 29 seconds | ETA: 10:21:37 AM US Mountain Standard Time
-████████████████████████████▊            70.00% (7/10) | Time remaining: 26 seconds | ETA: 10:21:50 AM US Mountain Standard Time
-████████████████████████████████▉        80.00% (8/10) | Time remaining: 15 seconds | ETA: 10:21:42 AM US Mountain Standard Time
-█████████████████████████████████████    90.00% (9/10) | Time remaining: 7 seconds | ETA: 10:21:40 AM US Mountain Standard Time
-████████████████████████████████████████  100.00% (10/10) | Time taken: 1 minute and 12 seconds | Completion time: 10:20:23 AM US Mountain Standard Time
+|            | 0.00% (0/10)
+|█▏          | 10.00% (1/10) | Time remaining: 2 minutes and 50 seconds | ETA: 9:48:42 PM US Mountain Standard Time
+|██▌         | 20.00% (2/10) | Time remaining: 1 minute and 48 seconds | ETA: 9:47:48 PM US Mountain Standard Time
+|███▋        | 30.00% (3/10) | Time remaining: 1 minute and 44 seconds | ETA: 9:48:02 PM US Mountain Standard Time
+|████▉       | 40.00% (4/10) | Time remaining: 1 minute and 27 seconds | ETA: 9:47:58 PM US Mountain Standard Time
+|██████      | 50.00% (5/10) | Time remaining: 1 minute and 14 seconds | ETA: 9:48:02 PM US Mountain Standard Time
+|███████▏    | 60.00% (6/10) | Time remaining: 1 minute and 2 seconds | ETA: 9:48:08 PM US Mountain Standard Time
+|████████▌   | 70.00% (7/10) | Time remaining: 45 seconds | ETA: 9:48:04 PM US Mountain Standard Time                                                               
+|█████████▋  | 80.00% (8/10) | Time remaining: 29 seconds | ETA: 9:48:01 PM US Mountain Standard Time
+|██████████▉ | 90.00% (9/10) | Time remaining: 13 seconds | ETA: 9:47:50 PM US Mountain Standard Time
+|████████████| 100.00% (10/10) | Time taken: 2 minutes and 16 seconds | Completion time: 9:45:32 PM US Mountain Standard Time
+```
+You can even access eta variables inside the loop by using the [walrus operator](https://docs.python.org/3/whatsnew/3.8.html#assignment-expressions):
+```python
+for item in (pbar := eta_bar(range(10))):  # This makes a new pbar object
+    process_item(item)
+    long_progress_string = pbar.eta.progress_string(verbose=True)  # Use the variables elsewhere
+    ...
 ```
 
 # Full Documentation

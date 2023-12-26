@@ -25,13 +25,13 @@ class Validate:
 
     @staticmethod
     def non_positive(value: int | float) -> None:
-        if value < 0:
-            raise ValidationError(f"Value '{value}' must not be negative")
+        if value > 0:
+            raise ValidationError(f"Value '{value}' must not be positive")
 
     @staticmethod
     def non_negative(value: int | float) -> None:
-        if value > 0:
-            raise ValidationError(f"Value '{value}' must not be positive")
+        if value < 0:
+            raise ValidationError(f"Value '{value}' must not be negative")
 
     @staticmethod
     def range_inclusive(value: int | float, min: int | float, max: int | float) -> None:
@@ -45,20 +45,20 @@ class Validate:
 
     @staticmethod
     def gt(first: int | float, second: int | float) -> None:
-        if first > second:
+        if not first > second:
             raise ValidationError(f"Value '{first}' must be greater than '{second}'")
 
     @staticmethod
     def gte(first: int | float, second: int | float) -> None:
-        if first >= second:
+        if not first >= second:
             raise ValidationError(f"Value '{first}' must be greater than or equal to '{second}'")
 
     @staticmethod
     def lt(first: int | float, second: int | float) -> None:
-        if first < second:
+        if not first < second:
             raise ValidationError(f"Value '{first}' must be less than '{second}'")
 
     @staticmethod
     def lte(first: int | float, second: int | float) -> None:
-        if first <= second:
+        if not first <= second:
             raise ValidationError(f"Value '{first}' must be less than or equal to '{second}'")
