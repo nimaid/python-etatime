@@ -54,6 +54,14 @@ class Completion:
     ):
         value = self.value()
         complete_chars = math.floor(width * value)
-        incomplete_chars = width - complete_chars - 1
 
-        return ("█" * complete_chars) + progress_char(value % 1)  + (" " * incomplete_chars)
+        bar_string = ""
+        for char in range(width):
+            if char < complete_chars:
+                bar_string += progress_char(1)
+            elif char > complete_chars:
+                bar_string += progress_char(0)
+            else:
+                bar_string += progress_char((value * width) % 1)
+
+        return bar_string

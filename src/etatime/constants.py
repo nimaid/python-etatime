@@ -22,4 +22,4 @@ class TimeDefaults:
 @dataclass
 class CompletionDefaults:
     """The defaults to use for the `completion` submodule."""
-    width: ClassVar[PositiveInt] = 10
+    width: ClassVar[PositiveInt] = 5
