@@ -414,69 +414,94 @@ def eta_calculator(
         yield item, calculator.get_eta(i)
 
 
-@validate_call
-def eta_bar(
-        items: Sequence[Any],
-        start_time: datetime.datetime = None,
-        verbose: bool = EtaDefaults.verbose,
-        percent_decimals: NonNegativeInt = EtaDefaults.percent_completion,
-        not_enough_data_string: str = EtaDefaults.not_enough_data_string,
-        sep: str = EtaDefaults.sep,
-        width: PositiveInt = CompletionDefaults.width,
-        output = sys.stdout
-) -> Iterator[Any]:
-    if start_time is None:
-        start_time = datetime.datetime.now()
+class eta_bar:
+    @validate_call
+    def __init__(
+            self,
+            items: Sequence[Any],
+            start_time: datetime.datetime = None,
+            verbose: bool = EtaDefaults.verbose,
+            percent_decimals: NonNegativeInt = EtaDefaults.percent_completion,
+            not_enough_data_string: str = EtaDefaults.not_enough_data_string,
+            sep: str = EtaDefaults.sep,
+            width: PositiveInt = CompletionDefaults.width,
+            output = sys.stderr
+    ):
+        if start_time is None:
+            start_time = datetime.datetime.now()
 
-    calculator = EtaCalculator(
-        total_items=len(items),
-        start_time=start_time,
-        verbose=verbose,
-        percent_decimals=percent_decimals,
-        not_enough_data_string=not_enough_data_string
-    )
+        self.items = items
+        self.start_time = start_time
+        self.verbose = verbose
+        self.percent_decimals = percent_decimals
+        self.sep = sep
+        self.width = width
+        self.output = output
 
-    eta = None
-    last_message_length = 0
-    try:
-        for i, item in enumerate(items):
-                eta = calculator.get_eta(i)
-                bar = Completion(
-                    total=eta.total_items,
-                    index=eta.item_index
-                ).bar(
-                    width=width
-                )
-
-                message = f"{bar} {eta.progress_string(sep=sep)}"
-                output.write(" " * last_message_length)
-                output.write("\r")
-                output.write(message)
-                output.write("\r")
-
-                last_message_length = len(message)
-                yield item
-    finally:
-        # TODO: Print completion, time taken, and completion time
-        eta.complete()
-        bar = Completion(
-            total=eta.total_items,
-            index=eta.item_index
-        ).bar(
-            width=width
+        self.calculator = EtaCalculator(
+            total_items=len(items),
+            start_time=start_time,
+            verbose=verbose,
+            percent_decimals=percent_decimals,
+            not_enough_data_string=not_enough_data_string
         )
 
-        time_taken_string = eta.string(eta.Value.TIME_TAKEN)
-        end_time_string = eta.string(eta.Value.CURRENT_TIME)
-        if verbose:
+    def write(
+            self,
+            value,
+            end="\n"
+    ):
+        self.output.write(value)
+        self.output.write(end)
+
+    def __iter__(self):
+        self.eta = None
+        self.total_items = len(self.items)
+        self.last_message_length = 0
+        self.last_message_index = 0
+
+        return self
+
+    def __next__(self) -> Iterator[Any]:
+        index = self.last_message_index + 1
+        if index < self.total_items:
+            self.eta = self.calculator.get_eta(index)
+            bar = Completion(
+                total=self.eta.total_items,
+                index=self.eta.item_index
+            ).bar(
+                width=self.width
+            )
+
+            message = f"{bar} {self.eta.progress_string(sep=self.sep)}"
+            self.write(" " * self.last_message_length, end="\r")
+            self.write(message, end="\r")
+
+            self.last_message_length = len(message)
+            self.last_message_index = index
+
+            return self.items[index]
+
+        self.eta.complete()
+        bar = Completion(
+            total=self.eta.total_items,
+            index=self.eta.item_index
+        ).bar(
+            width=self.width
+        )
+
+        time_taken_string = self.eta.string(self.eta.Value.TIME_TAKEN)
+        end_time_string = self.eta.string(self.eta.Value.CURRENT_TIME)
+        if self.verbose:
             time_taken_string = f"Time taken: {time_taken_string}"
             end_time_string = f"Completion time: {end_time_string}"
         else:
             time_taken_string = f"T: {time_taken_string}"
             end_time_string = f"C: {end_time_string}"
 
-        completion_string = eta.string(eta.Value.COMPLETION)
+        completion_string = self.eta.string(self.eta.Value.COMPLETION)
 
-        end_stats_string = sep.join([completion_string, time_taken_string, end_time_string])
-        output.write(f"{bar} {end_stats_string}")
-        output.write("\n")
+        end_stats_string = self.sep.join([completion_string, time_taken_string, end_time_string])
+        self.write(f"{bar} {end_stats_string}")
+
+        raise StopIteration
