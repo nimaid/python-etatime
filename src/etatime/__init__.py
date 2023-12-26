@@ -1,6 +1,6 @@
 """A library for tracking, computing, and formatting time estimates."""
 
-__version__ = "2.7.4"
+__version__ = "2.7.5"
 
 from . import eta, time, constants
 
