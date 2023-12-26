@@ -425,7 +425,7 @@ class eta_bar:
             not_enough_data_string: str = EtaDefaults.not_enough_data_string,
             sep: str = EtaDefaults.sep,
             width: PositiveInt = CompletionDefaults.width,
-            output = sys.stderr
+            file = sys.stderr
     ):
         if start_time is None:
             start_time = datetime.datetime.now()
@@ -436,7 +436,7 @@ class eta_bar:
         self.percent_decimals = percent_decimals
         self.sep = sep
         self.width = width
-        self.output = output
+        self.file = file
 
         self.calculator = EtaCalculator(
             total_items=len(items),
@@ -451,8 +451,7 @@ class eta_bar:
             value,
             end="\n"
     ):
-        self.output.write(value)
-        self.output.write(end)
+        print(value, end=end, file=self.file, flush=True)
 
     def __iter__(self):
         self.eta = None
@@ -473,7 +472,7 @@ class eta_bar:
                 width=self.width
             )
 
-            message = f"{bar} {self.eta.progress_string(sep=self.sep)}"
+            message = f"|{bar}| {self.eta.progress_string(sep=self.sep)}"
             self.write(" " * self.last_message_length, end="\r")
             self.write(message, end="\r")
 
