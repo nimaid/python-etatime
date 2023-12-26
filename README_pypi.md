@@ -5,7 +5,7 @@
 For more information on the `:=` (walrus) operator, see [the documentation.](https://docs.python.org/3/whatsnew/3.8.html#assignment-expressions)
 ```python
 import time, random
-from etatime.eta import eta_calculator
+from etatime.eta import EtaValue, eta_calculator
 
 
 # Just a placeholder function that takes a random amount of time
@@ -17,7 +17,7 @@ for item in (calc := eta_calculator(range(10))):  # Creates a `calc` object that
     print(calc.eta)  # Print the current progress stats
     process_item(item)  # Do your processing here
 
-print(f"Done processing {calc.eta.total_items} items in {calc.eta.string(calc.eta.Value.TIME_TAKEN)}!\n")
+print(f"Done processing {calc.eta.total_items} items in {calc.eta.string(EtaValue.TIME_TAKEN)}!\n")
 ```
 Here is an example of the sort of output this produces:
 ```
@@ -56,10 +56,10 @@ Done processing 10 items in 1 minute and 51 seconds!
 You can also build a custom message piece-by-piece, like so:
 ```python
 print(f"Processing item: '{item}'")
-print(f"  Completed: {calc.eta.string(calc.eta.Value.COMPLETION)}")
-print(f"  Time taken: {calc.eta.string(calc.eta.Value.TIME_TAKEN)}")
-print(f"  Time remaining: {calc.eta.string(calc.eta.Value.TIME_REMAINING)}")
-print(f"  ETA: {calc.eta.string(calc.eta.Value.ETA)}")
+print(f"  Completed: {calc.eta.string(EtaValue.COMPLETION)}")
+print(f"  Time taken: {calc.eta.string(EtaValue.TIME_TAKEN)}")
+print(f"  Time remaining: {calc.eta.string(EtaValue.TIME_REMAINING)}")
+print(f"  ETA: {calc.eta.string(EtaValue.ETA)}")
 ```
 This produces the following output:
 ```
@@ -120,7 +120,7 @@ You can also make a progress bar similar to how you would with tqdm:
 ```python
 import sys
 import time, random
-from etatime.eta import eta_bar
+from etatime.eta import EtaValue, eta_bar
 
 
 # Just a placeholder function that takes a random amount of time
@@ -131,7 +131,7 @@ def process_item(item):
 for item in (pbar := eta_bar(range(10), verbose=True, width=12, file=sys.stdout)):  # Updates the progress bar each loop
     process_item(item)  # Do your processing here
 
-print(f"Done processing {pbar.eta.total_items} items in {pbar.eta.string(pbar.eta.Value.TIME_TAKEN)}!\n")
+print(f"Done processing {pbar.eta.total_items} items in {pbar.eta.string(EtaValue.TIME_TAKEN)}!\n")
 ```
 Which gives the following output (on a single line):
 ```
@@ -150,7 +150,7 @@ Which gives the following output (on a single line):
 You can even access eta variables inside the for loop:
 ```python
 for item in (pbar := eta_bar(range(10), verbose=False)):  # This makes a new non-verbose progress bar
-    long_progress_string = pbar.eta.progress_string(verbose=True)  # Use the eta variables elsewhere
+    long_stats_string = pbar.eta.statistics_string(verbose=True)  # Use the eta variables elsewhere
     process_item(item)
     ...
 ```

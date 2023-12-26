@@ -2,6 +2,7 @@ import math
 
 from etatime.constants import EtaDefaults, CompletionDefaults
 
+
 def progress_char(value):
     char = "█"
     if value < 1 / 8:

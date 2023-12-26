@@ -10,6 +10,18 @@ from etatime.constants import EtaDefaults, CompletionDefaults
 from etatime.validate import Validate
 
 
+class EtaValue(Enum):
+    """An enum with attributes representing the values of an Eta object."""
+    TOTAL_ITEMS = 1
+    ITEM_INDEX = 2
+    START_TIME = 3
+    CURRENT_TIME = 4
+    ETA = 5
+    TIME_REMAINING = 6
+    COMPLETION = 7
+    TIME_TAKEN = 8
+
+
 class Eta:
     """Data class to hold, compute, and format ETA state information and time estimate info.
 
@@ -32,17 +44,6 @@ class Eta:
 
     :raises ValidationError: Raised when a parameter is invalid.
     """
-    class Value(Enum):
-        """An enum with attributes representing the values of the Eta object."""
-        TOTAL_ITEMS = 1
-        ITEM_INDEX = 2
-        START_TIME = 3
-        CURRENT_TIME = 4
-        ETA = 5
-        TIME_REMAINING = 6
-        COMPLETION = 7
-        TIME_TAKEN = 8
-
     def __init__(
             self,
             total_items: int,
@@ -155,7 +156,7 @@ class Eta:
 
     def string(
             self,
-            field: Value,
+            field: EtaValue,
             verbose: bool = None
     ) -> str:
         """Convert a specific field of this object into a human-readable string.
@@ -170,17 +171,17 @@ class Eta:
             verbose = self.verbose
 
         match field:
-            case self.Value.START_TIME:
+            case EtaValue.START_TIME:
                 field_string = TimeString.automatic(
                     time_in=self.start_time,
                     verbose=verbose
                 )
-            case self.Value.CURRENT_TIME:
+            case EtaValue.CURRENT_TIME:
                 field_string = TimeString.automatic(
                     time_in=self.start_time,
                     verbose=verbose
                 )
-            case self.Value.TIME_REMAINING:
+            case EtaValue.TIME_REMAINING:
                 if self.time_remaining is None:
                     field_string = self.not_enough_data_string
                 else:
@@ -188,12 +189,12 @@ class Eta:
                         time_in=self.time_remaining,
                         verbose=verbose
                     )
-            case self.Value.TIME_TAKEN:
+            case EtaValue.TIME_TAKEN:
                 field_string = TimeString.automatic(
                     time_in=self.time_taken,
                     verbose=verbose
                 )
-            case self.Value.ETA:
+            case EtaValue.ETA:
                 if self.eta is None:
                     field_string = self.not_enough_data_string
                 else:
@@ -201,7 +202,7 @@ class Eta:
                         time_in=self.eta,
                         verbose=verbose
                     )
-            case self.Value.COMPLETION:
+            case EtaValue.COMPLETION:
                 field_string = Completion(
                     total=self.total_items,
                     index=self.item_index
@@ -209,9 +210,9 @@ class Eta:
                     decimals=self.percent_decimals,
                     verbose=verbose
                 )
-            case self.Value.TOTAL_ITEMS:
+            case EtaValue.TOTAL_ITEMS:
                 field_string = str(self.total_items)
-            case self.Value.ITEM_INDEX:
+            case EtaValue.ITEM_INDEX:
                 field_string = str(self.item_index)
             case _:
                 field_string = EtaDefaults.invalid_string_type_string
@@ -236,13 +237,13 @@ class Eta:
         if verbose is None:
             verbose = self.verbose
 
-        completion_string = self.string(self.Value.COMPLETION, verbose=verbose)
+        completion_string = self.string(EtaValue.COMPLETION, verbose=verbose)
 
         if self.item_index <= 0:
             return completion_string
 
-        difference_string = self.string(self.Value.TIME_REMAINING, verbose=verbose)
-        eta_string = self.string(self.Value.ETA, verbose=verbose)
+        difference_string = self.string(EtaValue.TIME_REMAINING, verbose=verbose)
+        eta_string = self.string(EtaValue.ETA, verbose=verbose)
         if verbose:
             difference_string = f"Time remaining: {difference_string}"
             eta_string = f"ETA: {eta_string}"
@@ -270,9 +271,9 @@ class Eta:
         if verbose is None:
             verbose = self.verbose
 
-        time_taken_string = self.string(self.Value.TIME_TAKEN, verbose=verbose)
-        start_time_string = self.string(self.Value.START_TIME, verbose=verbose)
-        current_time_string = self.string(self.Value.CURRENT_TIME, verbose=verbose)
+        time_taken_string = self.string(EtaValue.TIME_TAKEN, verbose=verbose)
+        start_time_string = self.string(EtaValue.START_TIME, verbose=verbose)
+        current_time_string = self.string(EtaValue.CURRENT_TIME, verbose=verbose)
 
         if self.verbose:
             time_taken_string = f"Time taken: {time_taken_string}"
@@ -587,8 +588,8 @@ class eta_bar:
         self.complete()
 
         bar = self.bar(index)
-        time_taken_string = self.eta.string(self.eta.Value.TIME_TAKEN)
-        end_time_string = self.eta.string(self.eta.Value.CURRENT_TIME)
+        time_taken_string = self.eta.string(EtaValue.TIME_TAKEN)
+        end_time_string = self.eta.string(EtaValue.CURRENT_TIME)
         if self.verbose:
             time_taken_string = f"Time taken: {time_taken_string}"
             end_time_string = f"Completion time: {end_time_string}"
@@ -596,7 +597,7 @@ class eta_bar:
             time_taken_string = f"T: {time_taken_string}"
             end_time_string = f"C: {end_time_string}"
 
-        completion_string = self.eta.string(self.eta.Value.COMPLETION)
+        completion_string = self.eta.string(EtaValue.COMPLETION)
 
         end_stats_string = self.sep.join([completion_string, time_taken_string, end_time_string])
         self.write(f"{bar} {end_stats_string}\n", overwrite=True)
