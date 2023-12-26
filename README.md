@@ -9,6 +9,7 @@ pip install etatime
 ```
 
 ## Basic Usage
+For more information on the `:=` (walrus) operator, see [the documentation.](https://docs.python.org/3/whatsnew/3.8.html#assignment-expressions)
 ```python
 import time, random
 from etatime.eta import eta_calculator
@@ -152,7 +153,7 @@ Which gives the following output (on a single line):
 |██████████▉ | 90.00% (9/10) | Time remaining: 13 seconds | ETA: 9:47:50 PM US Mountain Standard Time
 |████████████| 100.00% (10/10) | Time taken: 2 minutes and 16 seconds | Completion time: 9:45:32 PM US Mountain Standard Time
 ```
-You can even access eta variables inside the for loop by using the [walrus operator](https://docs.python.org/3/whatsnew/3.8.html#assignment-expressions):
+You can even access eta variables inside the for loop:
 ```python
 for item in (pbar := eta_bar(range(10), verbose=False)):  # This makes a new non-verbose progress bar
     long_progress_string = pbar.eta.progress_string(verbose=True)  # Use the eta variables elsewhere
