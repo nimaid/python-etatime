@@ -2,7 +2,9 @@
 
 __version__ = "2.8.3"
 
-from . import eta, time, completion, constants, onecondition
+from .onecondition import ValidationError
+
+from . import eta, time, completion, constants
 
 # TODO: Make updated template from this project
 # TODO: Make separate `onecondition` python module for validate.py
