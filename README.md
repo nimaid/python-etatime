@@ -132,6 +132,7 @@ Done processing 10 items in 1 minute and 57 seconds!
 
 You can also make a progress bar similar to how you would with tqdm:
 ```python
+import sys
 import time, random
 from etatime.eta import eta_bar
 
@@ -141,7 +142,7 @@ def process_item(item):
     time.sleep(random.random() * 20)
 
 
-for item in eta_bar(range(10), verbose=True, width=40):  # Updates the progress bar each loop
+for item in eta_bar(range(10), verbose=True, width=10, file=sys.stdout):  # Updates the progress bar each loop
     process_item(item)  # Do your processing here
 ```
 Which gives the following output (on a single line):

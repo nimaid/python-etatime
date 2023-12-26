@@ -1,30 +1,33 @@
 """Provides tools to manipulate and format various time-based objects."""
 import datetime
 from dataclasses import dataclass
-from pydantic import BaseModel, NonNegativeInt, NonNegativeFloat, PositiveInt, validate_call
 
 from etatime.constants import TimeDefaults
+from etatime.validate import Validate
 
-
-class SplitTime(BaseModel):
+@dataclass
+class SplitTime:
     """Data class for holding split time values."""
-    weeks: NonNegativeInt
-    days: NonNegativeInt
-    hours: NonNegativeInt
-    minutes: NonNegativeInt
-    seconds: NonNegativeInt
-    milliseconds: NonNegativeInt | NonNegativeFloat
+    weeks: int
+    days: int
+    hours: int
+    minutes: int
+    seconds: int
+    milliseconds: int | float
 
 
-@validate_call
-def split_seconds(seconds_in: NonNegativeInt | NonNegativeFloat) -> SplitTime:
+def split_seconds(seconds_in: int | float) -> SplitTime:
     """Split seconds into parts ranging from weeks to milliseconds and return a SplitTime object with those values.
 
     :param int seconds_in: The total number of seconds to split up.
 
+    :raises ValidationError: Raised when a parameter is invalid.
+
     :return: A SplitTime object with the split weeks, days, hours, minutes, seconds, and milliseconds.
     :rtype: SplitTime
     """
+    Validate.non_negative(seconds_in)
+
     weeks, remainder = divmod(seconds_in, (60 ** 2) * 24 * 7)
     days, remainder = divmod(remainder, (60 ** 2) * 24)
     hours, remainder = divmod(remainder, 60 ** 2)
@@ -42,15 +45,18 @@ def split_seconds(seconds_in: NonNegativeInt | NonNegativeFloat) -> SplitTime:
     )
 
 
-@validate_call
-def day_of_month_suffix(day: PositiveInt) -> str:
+def day_of_month_suffix(day: int) -> str:
     """Return the appropriate suffix for a specified day of the month.
 
     :param int day: The day of the month to get the suffix for.
 
+    :raises ValidationError: Raised when a parameter is invalid.
+
     :return: A string that is either 'st', 'nd', 'rd', or 'th'.
     :rtype: str
     """
+    Validate.positive(day)
+
     if day % 100 in [11, 12, 13]:
         return "th"
 
@@ -65,19 +71,21 @@ def day_of_month_suffix(day: PositiveInt) -> str:
             return "th"
 
 
-@validate_call
-def day_of_month_string(day: PositiveInt) -> str:
+def day_of_month_string(day: int) -> str:
     """Convert a numerical day of the month to a user-friendly string.
 
     :param int day: The day of the month to convert.
 
+    :raises ValidationError: Raised when a parameter is invalid.
+
     :return: A string with the day of the month and an appropriate suffix ('st', 'nd', 'rd', or 'th').
     :rtype: str
     """
+    Validate.positive(day)
+
     return f"{day}{day_of_month_suffix(day)}"
 
 
-@validate_call
 def timezone_name(datetime_in: datetime.datetime) -> str:
     """Get the full timezone name from a datetime.datetime object.
 
@@ -91,14 +99,12 @@ def timezone_name(datetime_in: datetime.datetime) -> str:
     return timezone.tzinfo.tzname(timezone)
 
 
-@dataclass
 class TimeString:
     """Data class with methods to format various datetime objects into human-readable strings."""
     @dataclass
     class TimeDelta:
         """Data class with methods to format datetime.timedelta objects and return human-readable strings."""
         @staticmethod
-        @validate_call
         def short(timedelta_in: datetime.timedelta) -> str:
             """Return the datetime.timedelta object as a short human-readable string.
 
@@ -128,7 +134,6 @@ class TimeString:
             return time_string
 
         @staticmethod
-        @validate_call
         def long(timedelta_in: datetime.timedelta) -> str:
             """Return the datetime.timedelta object as a long human-readable string.
 
@@ -178,7 +183,6 @@ class TimeString:
     class DateTime:
         """Data class with methods to format datetime.datetime objects and return human-readable strings."""
         @staticmethod
-        @validate_call
         def short(datetime_in: datetime.datetime) -> str:
             """Return the datetime.datetime object as a short human-readable string.
 
@@ -197,7 +201,6 @@ class TimeString:
             return datetime_in.strftime(format_string).strip()
 
         @staticmethod
-        @validate_call
         def long(datetime_in: datetime.datetime) -> str:
             """Return the datetime.datetime object as a long human-readable string.
 
@@ -219,7 +222,6 @@ class TimeString:
             return time_string
 
     @staticmethod
-    @validate_call
     def automatic(
             time_in: datetime.datetime | datetime.timedelta,
             verbose: bool

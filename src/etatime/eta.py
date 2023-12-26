@@ -3,11 +3,11 @@ import sys
 import datetime
 from enum import Enum
 from typing import Any, Annotated, Iterator, Sequence
-from pydantic import NonNegativeInt, PositiveInt, Field, validate_call
 
 from etatime.completion import Completion
 from etatime.time import TimeString
 from etatime.constants import EtaDefaults, CompletionDefaults
+from etatime.validate import Validate, ValidationError
 
 
 class Eta:
@@ -30,8 +30,7 @@ class Eta:
     :ivar float completion: The completion percentage.
     :ivar datetime.timedelta time_taken: The time taken.
 
-    :raises pydantic.ValidationError: Raised when a parameter is invalid.
-    :raises IndexError: Raised when the index is too large.
+    :raises ValidationError: Raised when a parameter is invalid.
     """
     class Value(Enum):
         """An enum with attributes representing the values of the Eta object."""
@@ -44,17 +43,20 @@ class Eta:
         COMPLETION = 7
         TIME_TAKEN = 8
 
-    @validate_call
     def __init__(
             self,
-            total_items: Annotated[NonNegativeInt, Field(gt=1)],
-            item_index: NonNegativeInt,
+            total_items: int,
+            item_index: int,
             start_time: datetime.datetime,
             current_time: datetime.datetime = None,
             verbose: bool = EtaDefaults.verbose,
-            percent_decimals: NonNegativeInt = EtaDefaults.percent_completion,
+            percent_decimals: int = EtaDefaults.percent_completion,
             not_enough_data_string: str = EtaDefaults.not_enough_data_string
     ):
+        Validate.gte(total_items, 2)
+        Validate.non_negative(item_index)
+        Validate.non_negative(percent_decimals)
+
         if current_time is None:
             current_time = datetime.datetime.now()
 
@@ -68,6 +70,7 @@ class Eta:
 
         self._validate_item_index(self.item_index)
 
+        self.verbose = verbose
         self.eta = self._eta()
         self.time_remaining = self._time_remaining()
         self.completion = self._completion()
@@ -91,7 +94,7 @@ class Eta:
 
     def _validate_item_index(
             self,
-            item_index: NonNegativeInt
+            item_index: int
     ) -> None:
         """Validate that an index is not larger than the total items and raise an IndexError otherwise.
 
@@ -103,8 +106,7 @@ class Eta:
 
         :rtype: None
         """
-        if item_index > self.total_items - 1:
-            raise IndexError(f"Item index should be less than {self.total_items - 1} (the total items - 1)")
+        Validate.range_inclusive(item_index, 0, self.total_items - 1)
 
     def _eta(self) -> datetime.datetime | None:
         """Compute the ETA and return it as a datetime.datetime object.
@@ -151,25 +153,32 @@ class Eta:
         """
         return self.current_time - self.start_time
 
-    @validate_call
-    def string(self, field: Value) -> str:
+    def string(
+            self,
+            field: Value,
+            verbose: bool = None
+    ) -> str:
         """Convert a specific field of this object into a human-readable string.
 
         :param Field field: The specific field to convert to a string.
+        :param bool verbose: If set, override the default verbosity.
 
         :return: The human-readable string for the specified field.
         :rtype: str
         """
+        if verbose is None:
+            verbose = self.verbose
+
         match field:
             case self.Value.START_TIME:
                 field_string = TimeString.automatic(
                     time_in=self.start_time,
-                    verbose=self.verbose
+                    verbose=verbose
                 )
             case self.Value.CURRENT_TIME:
                 field_string = TimeString.automatic(
                     time_in=self.start_time,
-                    verbose=self.verbose
+                    verbose=verbose
                 )
             case self.Value.TIME_REMAINING:
                 if self.time_remaining is None:
@@ -177,12 +186,12 @@ class Eta:
                 else:
                     field_string = TimeString.automatic(
                         time_in=self.time_remaining,
-                        verbose=self.verbose
+                        verbose=verbose
                     )
             case self.Value.TIME_TAKEN:
                 field_string = TimeString.automatic(
                     time_in=self.time_taken,
-                    verbose=self.verbose
+                    verbose=verbose
                 )
             case self.Value.ETA:
                 if self.eta is None:
@@ -190,7 +199,7 @@ class Eta:
                 else:
                     field_string = TimeString.automatic(
                         time_in=self.eta,
-                        verbose=self.verbose
+                        verbose=verbose
                     )
             case self.Value.COMPLETION:
                 field_string = Completion(
@@ -198,7 +207,7 @@ class Eta:
                     index=self.item_index
                 ).string(
                     decimals=self.percent_decimals,
-                    verbose=self.verbose
+                    verbose=verbose
                 )
             case self.Value.TOTAL_ITEMS:
                 field_string = str(self.total_items)
@@ -209,28 +218,32 @@ class Eta:
 
         return field_string
 
-    @validate_call
     def progress_string(
             self,
-            sep: str = EtaDefaults.sep
+            sep: str = EtaDefaults.sep,
+            verbose: bool = None
     ) -> str:
         """Combine the most useful stats into a string focused on conveying progress and return it.
 
         :param str sep: The string to use as a seperator between fields.
+        :param bool verbose: If set, override the default verbosity.
 
         :raises pydantic.ValidationError: Raised when a parameter is invalid.
 
         :return: A human-readable string that includes (in order) completion, time remaining, and ETA.
         :rtype: str
         """
-        completion_string = self.string(self.Value.COMPLETION)
+        if verbose is None:
+            verbose = self.verbose
+
+        completion_string = self.string(self.Value.COMPLETION, verbose=verbose)
 
         if self.item_index <= 0:
             return completion_string
 
-        difference_string = self.string(self.Value.TIME_REMAINING)
-        eta_string = self.string(self.Value.ETA)
-        if self.verbose:
+        difference_string = self.string(self.Value.TIME_REMAINING, verbose=verbose)
+        eta_string = self.string(self.Value.ETA, verbose=verbose)
+        if verbose:
             difference_string = f"Time remaining: {difference_string}"
             eta_string = f"ETA: {eta_string}"
         else:
@@ -239,23 +252,27 @@ class Eta:
 
         return sep.join([completion_string, difference_string, eta_string])
 
-    @validate_call
     def statistics_string(
             self,
-            sep: str = EtaDefaults.sep
+            sep: str = EtaDefaults.sep,
+            verbose: bool = None
     ) -> str:
         """Combine all the stats into a string focused on conveying everything useful about this object.
 
         :param str sep: The string to use as a seperator between fields.
+        :param bool verbose: If set, override the default verbosity.
 
         :raises pydantic.ValidationError: Raised when a parameter is invalid.
 
         :return: A human-readable string that includes all useful statistics about this object.
         :rtype: str
         """
-        time_taken_string = self.string(self.Value.TIME_TAKEN)
-        start_time_string = self.string(self.Value.START_TIME)
-        current_time_string = self.string(self.Value.CURRENT_TIME)
+        if verbose is None:
+            verbose = self.verbose
+
+        time_taken_string = self.string(self.Value.TIME_TAKEN, verbose=verbose)
+        start_time_string = self.string(self.Value.START_TIME, verbose=verbose)
+        current_time_string = self.string(self.Value.CURRENT_TIME, verbose=verbose)
 
         if self.verbose:
             time_taken_string = f"Time taken: {time_taken_string}"
@@ -267,13 +284,12 @@ class Eta:
             current_time_string = f"C: {current_time_string}"
 
         return sep.join([
-            self.progress_string(),
+            self.progress_string(verbose=verbose),
             start_time_string,
             current_time_string,
             time_taken_string
         ])
 
-    @validate_call
     def complete(
             self,
             current_time: datetime.datetime = None,
@@ -407,7 +423,7 @@ def eta_calculator(
         start_time=start_time,
         verbose=verbose,
         percent_decimals=percent_decimals,
-        not_enough_data_string=not_enough_data_string
+        not_enough_data_string=not_enough_data_string,
     )
 
     for i, item in enumerate(items):
@@ -453,6 +469,7 @@ class eta_bar:
     ):
         if overwrite:
             print("", end=f"\r{value}", file=self.file)
+            #print(value, file=self.file)
         else:
             print(value, file=self.file)
 
