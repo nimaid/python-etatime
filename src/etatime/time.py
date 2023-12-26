@@ -1,9 +1,9 @@
 """Provides tools to manipulate and format various time-based objects."""
 import datetime
 from dataclasses import dataclass
+from onecondition import Validate
 
 from etatime.constants import TimeDefaults
-from etatime.onecondition import Validate
 
 
 @dataclass
@@ -27,7 +27,7 @@ def split_seconds(seconds_in: int | float) -> SplitTime:
     :return: A SplitTime object with the split weeks, days, hours, minutes, seconds, and milliseconds.
     :rtype: SplitTime
     """
-    Validate.non_negative(seconds_in)
+    Validate.not_negative(seconds_in)
 
     weeks, remainder = divmod(seconds_in, (60 ** 2) * 24 * 7)
     days, remainder = divmod(remainder, (60 ** 2) * 24)

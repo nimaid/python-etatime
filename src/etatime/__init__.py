@@ -2,7 +2,7 @@
 
 __version__ = "2.8.3"
 
-from .onecondition import ValidationError
+from onecondition import ValidationError
 
 from . import eta, time, completion, constants
 

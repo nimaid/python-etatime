@@ -3,11 +3,11 @@ import sys
 import datetime
 from enum import Enum
 from typing import Any, Iterator, Sequence
+from onecondition import Validate
 
 from etatime.completion import Completion
 from etatime.time import TimeString
 from etatime.constants import EtaDefaults, CompletionDefaults
-from etatime.onecondition import Validate
 
 
 class EtaValue(Enum):
@@ -44,6 +44,7 @@ class Eta:
 
     :raises ValidationError: Raised when a parameter is invalid.
     """
+
     def __init__(
             self,
             total_items: int,
@@ -55,8 +56,8 @@ class Eta:
             not_enough_data_string: str = EtaDefaults.not_enough_data_string
     ):
         Validate.gte(total_items, 2)
-        Validate.non_negative(item_index)
-        Validate.non_negative(percent_decimals)
+        Validate.not_negative(item_index)
+        Validate.not_negative(percent_decimals)
 
         if current_time is None:
             current_time = datetime.datetime.now()
@@ -140,9 +141,9 @@ class Eta:
         :rtype: float
         """
         return Completion(
-                    total=self.total_items,
-                    index=self.item_index
-                ).value()
+            total=self.total_items,
+            index=self.item_index
+        ).value()
 
     def _time_taken(self) -> datetime.timedelta:
         """Compute the time taken and return it as a datetime.timedelta object.
@@ -328,6 +329,7 @@ class EtaCalculator:
 
     :raises ValidationError: Raised when a parameter is invalid.
     """
+
     def __init__(
             self,
             total_items: int,
@@ -337,7 +339,7 @@ class EtaCalculator:
             not_enough_data_string: str = EtaDefaults.not_enough_data_string
     ):
         Validate.gte(total_items, 2)
-        Validate.non_negative(percent_decimals)
+        Validate.not_negative(percent_decimals)
 
         if start_time is None:
             start_time = datetime.datetime.now()
@@ -409,13 +411,13 @@ class EtaCalculator:
             self.eta.complete()
         else:
             self.eta = Eta(
-            total_items=self.total_items,
-            item_index=self.total_items - 1,
-            start_time=self.start_time,
-            current_time=current_time,
-            verbose=self.verbose,
-            percent_decimals=self.percent_decimals
-        )
+                total_items=self.total_items,
+                item_index=self.total_items - 1,
+                start_time=self.start_time,
+                current_time=current_time,
+                verbose=self.verbose,
+                percent_decimals=self.percent_decimals
+            )
 
 
 class eta_calculator:
@@ -430,6 +432,7 @@ class eta_calculator:
     :return: an identical iterator, but with progress tracking in the computed self.eta attribute.
     :rtype: Iterator[Any]
     """
+
     def __init__(
             self,
             items: Sequence[Any],
@@ -439,7 +442,7 @@ class eta_calculator:
             not_enough_data_string: str = EtaDefaults.not_enough_data_string,
             sep: str = EtaDefaults.sep
     ):
-        Validate.non_negative(percent_decimals)
+        Validate.not_negative(percent_decimals)
 
         if start_time is None:
             start_time = datetime.datetime.now()
@@ -458,6 +461,8 @@ class eta_calculator:
         )
 
         self.eta = self.calculator.eta
+        self.total_items = len(self.items)
+        self.last_index = -1
 
     def complete(
             self,
@@ -470,9 +475,6 @@ class eta_calculator:
             self.eta.complete(current_time=current_time)
 
     def __iter__(self):
-        self.total_items = len(self.items)
-        self.last_index = -1
-
         return self
 
     def __next__(self):
@@ -500,9 +502,9 @@ class eta_bar:
             not_enough_data_string: str = EtaDefaults.not_enough_data_string,
             sep: str = EtaDefaults.sep,
             width: int = CompletionDefaults.width,
-            file = sys.stderr
+            file=sys.stderr
     ):
-        Validate.non_negative(percent_decimals)
+        Validate.not_negative(percent_decimals)
         Validate.positive(width)
 
         if start_time is None:
@@ -523,7 +525,12 @@ class eta_bar:
             not_enough_data_string=not_enough_data_string
         )
 
-    def write(
+        self.eta = self.calculator.eta
+        self.total_items = len(self.items)
+        self.last_message_length = 0
+        self.last_index = -1
+
+    def _write(
             self,
             value,
             overwrite=False
@@ -534,19 +541,19 @@ class eta_bar:
         else:
             print(value, file=self.file)
 
-    def bar(
+    def _get_bar_text(
             self,
             index
     ):
-        bar = Completion(
+        bar_text = Completion(
             total=self.eta.total_items,
             index=index
         ).bar(
             width=self.width
         )
-        bar = f"|{bar}|"
+        bar_text = f"|{bar_text}|"
 
-        return bar
+        return bar_text
 
     def complete(
             self,
@@ -559,24 +566,19 @@ class eta_bar:
             self.eta.complete(current_time=current_time)
 
     def __iter__(self):
-        self.eta = self.calculator.eta
-        self.total_items = len(self.items)
-        self.last_message_length = 0
-        self.last_index = -1
-
         return self
 
     def __next__(self) -> Iterator[Any]:
         index = self.last_index + 1
         if index < self.total_items:
             self.calculator.update_eta(index)
-            self.eta =  self.calculator.eta
+            self.eta = self.calculator.eta
 
-            bar = self.bar(index)
+            bar_text = self._get_bar_text(index)
 
-            message = f"{bar} {self.eta.progress_string(sep=self.sep)}"
-            self.write(" " * self.last_message_length, overwrite=True)
-            self.write(message, overwrite=True)
+            message = f"{bar_text} {self.eta.progress_string(sep=self.sep)}"
+            self._write(" " * self.last_message_length, overwrite=True)
+            self._write(message, overwrite=True)
 
             self.last_message_length = len(message)
             self.last_index = index
@@ -585,7 +587,7 @@ class eta_bar:
 
         self.complete()
 
-        bar = self.bar(index)
+        bar_text = self._get_bar_text(index)
         time_taken_string = self.eta.string(EtaValue.TIME_TAKEN)
         end_time_string = self.eta.string(EtaValue.CURRENT_TIME)
         if self.verbose:
@@ -598,6 +600,6 @@ class eta_bar:
         completion_string = self.eta.string(EtaValue.COMPLETION)
 
         end_stats_string = self.sep.join([completion_string, time_taken_string, end_time_string])
-        self.write(f"{bar} {end_stats_string}\n", overwrite=True)
+        self._write(f"{bar_text} {end_stats_string}\n", overwrite=True)
 
         raise StopIteration
