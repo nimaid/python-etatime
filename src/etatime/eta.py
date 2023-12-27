@@ -82,8 +82,10 @@ class EtaBar:
         return formatted_text
 
     def update(self, n: int = None):
+        pbar_format_dict = self.pbar.format_dict
+
         if n is None:
-            self.n = self.pbar.n
+            self.n = pbar_format_dict["n"]
         else:
             self.n = n
             self.pbar.update(self.n)
@@ -91,12 +93,16 @@ class EtaBar:
         self.pbar.bar_format = self._make_eta_bar_format()
 
         # Extract useful information from the tqdm progress bar
-        self.total_items = self.pbar.total
+        self.total_items = pbar_format_dict["total"]
         current_t = self.pbar.last_print_t
+        self.rate = pbar_format_dict["rate"]
+        elapsed_t = pbar_format_dict["elapsed"]
+
+        if self.rate is None and elapsed_t:
+            self.rate = (self.n - self._initial) / elapsed_t
 
         # Compute some values based on the tqdm source code
         elapsed_t = current_t - self._start_t if current_t else 0
-        self.rate = (self.n - self._initial) / elapsed_t if elapsed_t else None
         remaining_t = (self.total_items - self.n) / self.rate if self.rate and self.total_items else None
 
         # Compute the ETA
