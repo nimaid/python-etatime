@@ -23,7 +23,17 @@ class EtaBar:
         if "bar_format" in kwargs:
             del kwargs[bar_format]
 
-        self.pbar = tqdm(items, **kwargs)
+        self.start_time = datetime.datetime.now()  # Temporary
+        self.current_time = None
+        self.elapsed_time = None
+        self.remaining_time = None
+        self.eta_time = None
+
+        self.pbar = tqdm(
+            items,
+            bar_format=self._make_eta_bar_format(),
+            **kwargs
+        )
 
         self._initial = self.pbar.initial
         self._start_t = self.pbar.start_t
@@ -35,12 +45,6 @@ class EtaBar:
         self.percent = None
 
         self.start_time = datetime.datetime.fromtimestamp(self._start_t)
-        self.current_time = None
-        self.elapsed_time = None
-        self.remaining_time = None
-        self.eta_time = None
-
-        self.pbar.bar_format = self._make_eta_bar_format(),
 
 
     def _make_eta_bar_format(
