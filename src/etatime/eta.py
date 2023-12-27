@@ -38,6 +38,8 @@ class EtaBar:
         self.remaining_time = None
         self.eta_time = None
 
+        self.pbar.bar_format = self._make_eta_bar_format()
+
     def _make_eta_bar_format(
             self
     ):
