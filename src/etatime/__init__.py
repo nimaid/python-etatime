@@ -1,6 +1,6 @@
 """A library for tracking, computing, and formatting time estimates. (Based on `tqdm`)."""
 
-__version__ = "3.1.1"
+__version__ = "3.1.2"
 
 from onecondition import ValidationError
 
