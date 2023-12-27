@@ -1,17 +1,17 @@
-"""A library for tracking, computing, and formatting time estimates."""
+"""A library for tracking, computing, and formatting time estimates. (Based on `tqdm`)."""
 
-__version__ = "2.8.4"
+__version__ = "3.1.0"
 
 from onecondition import ValidationError
 
-from . import eta, time, completion, constants
+from .eta import EtaBar
+from .time import TimeString
 
-# TODO: Make updated template from this project
-# TODO: Make separate `onecondition` python module for validate.py
+
+
 # TODO: Add annotations everywhere
 # TODO: Finish adding docstrings
 # TODO: Add doctest strings
 # TODO: Add comprehensive unit tests
 # TODO: Integration tests
-# TODO: Benchmark speed tests (compare to tqdm)
-# TODO: Investigate if inlining instance attributes helps with speed
+

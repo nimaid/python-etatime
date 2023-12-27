@@ -3,8 +3,6 @@ import datetime
 from dataclasses import dataclass
 from onecondition import Validate
 
-from etatime.constants import TimeDefaults
-
 
 @dataclass
 class SplitTime:
@@ -225,26 +223,28 @@ class TimeString:
     @staticmethod
     def automatic(
             time_in: datetime.datetime | datetime.timedelta,
-            verbose: bool
+            long: bool = False
     ):
         """Automatically convert a datetime.datetime or datetime.timedelta object to a string and return it.
 
         :param datetime.datetime | datetime.timedelta time_in: The object to convert.
-        :param verbose: If we should return the long or short version.
+        :param long: If we should return the long or short version.
+
+        :raises TypeError: If the time_in is not a datetime.datetime or datetime.timedelta object
 
         :return: The input time in a human-readable format.
         :rtype: str
         """
         if isinstance(time_in, datetime.datetime):
-            if verbose:
+            if long:
                 return TimeString.DateTime.long(time_in)
 
             return TimeString.DateTime.short(time_in)
 
         if isinstance(time_in, datetime.timedelta):
-            if verbose:
+            if long:
                 return TimeString.TimeDelta.long(time_in)
 
             return TimeString.TimeDelta.short(time_in)
 
-        return TimeDefaults.unknown_format_string
+        raise TypeError(f"Time in must be either a datetime or timedelta object, not a {type(time_in)}")
