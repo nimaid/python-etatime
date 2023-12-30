@@ -37,7 +37,7 @@ def process_item(item):
 for item in (eta := EtaBar(range(100))):  # Creates a progress bar which tracks stats
     process_item(item)  # Do your processing here
 
-print(f"Done processing {eta.Stats.total_items} items in {TimeString.automatic(eta.Stats.elapsed_timedelta, long=True)}!\n")
+print(f"Done processing {eta.stats.total_items} items in {TimeString.automatic(eta.stats.elapsed_timedelta, long=True)}!\n")
 ```
 Here is an example of the sort of output this produces:
 ```
