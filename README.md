@@ -20,13 +20,14 @@ In addition, I wanted to be able to access information like ETA in my code. Whil
 ## Basic Usage
 The main feature of this library is the `EtaBar` class. This is a wrapper for the `tqdm.tqdm` class that provides variables which track important ETA state information for use elsewhere in your code.
 
-Additionally, the `TimeString` class provides methods to format the resultant time objects into human-readable text. This is used inside `EtaBar` class to add additional `bar_format` codes.
+This uses another package I made called `timefmt` to format the times into human-readable text.
 
 *For more information on the `:=` (walrus) operator, see [the documentation.](https://docs.python.org/3/whatsnew/3.8.html#assignment-expressions)*
 
 ```python
 import time, random
-from etatime import EtaBar, TimeString
+import timefmt
+from etatime import EtaBar
 
 
 # Just a placeholder function that takes a random amount of time
@@ -37,7 +38,7 @@ def process_item(item):
 for item in (eta := EtaBar(range(100))):  # Creates a progress bar which tracks stats
     process_item(item)  # Do your processing here
 
-print(f"Done processing {eta.stats.total_items} items in {TimeString.automatic(eta.stats.elapsed_timedelta, long=True)}!\n")
+print(f"Done processing {eta.stats.total_items} items in {timefmt.td.long(eta.stats.elapsed_timedelta)}!\n")
 ```
 Here is an example of the sort of output this produces:
 ```

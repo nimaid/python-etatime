@@ -6,5 +6,5 @@ dependencies:
   - pip
   - pip:
     - pylint
-    - onecondition >= 0.1.2
+    - timefmt >= 0.1.0
     - tqdm >= 4.66.1

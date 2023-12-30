@@ -1,12 +1,8 @@
 """A library for tracking, computing, and formatting time estimates. (Based on `tqdm`)."""
 
-__version__ = "3.3.1"
+__version__ = "3.4.0"
 
-from onecondition import ValidationError
-
-from .eta import EtaBar
-from .time import TimeString
-
+from etatime.eta import EtaBar
 
 
 # TODO: Add annotations everywhere
@@ -14,4 +10,3 @@ from .time import TimeString
 # TODO: Add doctest strings
 # TODO: Add comprehensive unit tests
 # TODO: Integration tests
-

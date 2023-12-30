@@ -3,7 +3,7 @@ import datetime
 from dataclasses import dataclass
 from tqdm import tqdm
 
-from etatime.time import TimeString
+import timefmt
 from etatime.constants import EtaDefaults
 
 
@@ -30,13 +30,13 @@ class EtaBar(tqdm):
     def __init__(
             self,
             *args,
-            bar_format: str = "{l_bar}{bar}| {remainingS} | {etaS}",
+            bar_format: str = "{l_bar}{bar}| {n_fmt}/{total_fmt} | {remainingS} | {etaS}",
             **kwargs):
         if "bar_format" in kwargs:
             del kwargs["bar_format"]
-        super().__init__(*args, bar_format=bar_format, **kwargs)
-        
         self.stats = EtaStats()
+
+        super().__init__(*args, bar_format=bar_format, **kwargs)
 
         self.stats.start_time = self.start_t
 
@@ -79,49 +79,49 @@ class EtaBar(tqdm):
             self.stats.eta_time) else None
 
         # Add custom format codes
-        start_string = TimeString.DateTime.short(self.stats.start_datetime) if (
+        start_string = timefmt.dt.short(self.stats.start_datetime) if (
             self.stats.start_datetime) else EtaDefaults.low_data_string
         start_string = f"S: {start_string}"
         d.update(startS=start_string)
-        startL_string = TimeString.DateTime.long(self.stats.start_datetime) if (
+        start_long_string = timefmt.dt.long(self.stats.start_datetime) if (
             self.stats.start_datetime) else EtaDefaults.low_data_string
-        startL_string = f"S: {startL_string}"
-        d.update(startL=startL_string)
+        start_long_string = f"S: {start_long_string}"
+        d.update(startL=start_long_string)
 
-        current_string = TimeString.DateTime.short(self.stats.current_datetime) if (
+        current_string = timefmt.dt.short(self.stats.current_datetime) if (
             self.stats.current_datetime) else EtaDefaults.low_data_string
         current_string = f"C: {current_string}"
         d.update(currentS=current_string)
-        currentL_string = TimeString.DateTime.long(self.stats.current_datetime) if (
+        current_long_string = timefmt.dt.long(self.stats.current_datetime) if (
             self.stats.current_datetime) else EtaDefaults.low_data_string
-        currentL_string = f"C: {currentL_string}"
-        d.update(currentL=currentL_string)
+        current_long_string = f"C: {current_long_string}"
+        d.update(currentL=current_long_string)
 
-        elapsed_string = TimeString.TimeDelta.short(self.stats.elapsed_timedelta) if (
+        elapsed_string = timefmt.td.short(self.stats.elapsed_timedelta) if (
             self.stats.elapsed_timedelta) else EtaDefaults.low_data_string
         elapsed_string = f"E: {elapsed_string}"
         d.update(elapsedS=elapsed_string)
-        elapsedL_string = TimeString.TimeDelta.long(self.stats.elapsed_timedelta) if (
+        elapsed_long_string = timefmt.td.long(self.stats.elapsed_timedelta) if (
             self.stats.elapsed_timedelta) else EtaDefaults.low_data_string
-        elapsedL_string = f"E: {elapsedL_string}"
-        d.update(elapsedL=elapsedL_string)
+        elapsed_long_string = f"E: {elapsed_long_string}"
+        d.update(elapsedL=elapsed_long_string)
 
-        remaining_string = TimeString.TimeDelta.short(self.stats.remaining_timedelta) if (
+        remaining_string = timefmt.td.short(self.stats.remaining_timedelta) if (
             self.stats.remaining_timedelta) else EtaDefaults.low_data_string
         remaining_string = f"R: {remaining_string}"
         d.update(remainingS=remaining_string)
-        remainingL_string = TimeString.TimeDelta.long(self.stats.remaining_timedelta) if (
+        remaining_long_string = timefmt.td.long(self.stats.remaining_timedelta) if (
             self.stats.remaining_timedelta) else EtaDefaults.low_data_string
-        remainingL_string = f"R: {remainingL_string}"
-        d.update(elapsedL=remainingL_string)
+        remaining_long_string = f"R: {remaining_long_string}"
+        d.update(elapsedL=remaining_long_string)
 
-        eta_string = TimeString.DateTime.short(self.stats.eta_datetime) if (
+        eta_string = timefmt.dt.short(self.stats.eta_datetime) if (
             self.stats.eta_datetime) else EtaDefaults.low_data_string
         eta_string = f"ETA: {eta_string}"
         d.update(etaS=eta_string)
-        etaL_string = TimeString.DateTime.long(self.stats.eta_datetime) if (
+        eta_long_string = timefmt.dt.long(self.stats.eta_datetime) if (
             self.stats.eta_datetime) else EtaDefaults.low_data_string
-        etaL_string = f"ETA: {etaL_string}"
-        d.update(etaL=etaL_string)
+        eta_long_string = f"ETA: {eta_long_string}"
+        d.update(etaL=eta_long_string)
 
         return d
