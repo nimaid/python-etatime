@@ -1,126 +1,124 @@
 """Provides tools for tracking, computing, and formatting time estimates."""
 import datetime
-from typing import Any, Iterator, Iterable, Generator
+from dataclasses import dataclass
 from tqdm import tqdm
 
 from etatime.time import TimeString
 from etatime.constants import EtaDefaults
 
 
-class SafeDict(dict):
-    def __missing__(self, key):
-        return '{' + key + '}'
-
-
-class EtaBar:
+class EtaBar(tqdm):
     def __init__(
             self,
-            items: Iterable[Any],
-            bar_format: str = "{l_bar}{bar}{r_bar}",
-            **kwargs
-    ):
-        self.bar_format = bar_format
+            *args,
+            bar_format: str = "{l_bar}{bar}| {remainingS} | {etaS}",
+            **kwargs):
         if "bar_format" in kwargs:
-            del kwargs[bar_format]
+            del kwargs["bar_format"]
+        super().__init__(*args, bar_format=bar_format, **kwargs)
 
-        self.start_time = datetime.datetime.now()  # Temporary
-        self.current_time = None
-        self.elapsed_time = None
-        self.remaining_time = None
-        self.eta_time = None
+        self.Stats.start_time = self.start_t
 
-        self.pbar = tqdm(
-            items,
-            bar_format=self._make_eta_bar_format(),
-            **kwargs
-        )
+    @dataclass
+    class Stats:
+        start_time: float | None = None
+        start_datetime: datetime.datetime | None = None
+        current_time: float | None = None
+        current_datetime: datetime.datetime | None = None
+        elapsed_time: float | None = None
+        elapsed_timedelta: datetime.timedelta | None = None
+        remaining_time: float | None = None
+        remaining_timedelta: datetime.timedelta | None = None
+        eta_time: float | None = None
+        eta_datetime: datetime.datetime | None = None
+        initial: int | None = None
+        total_items: int | None = None
+        rate: float | None = None
+        n: int | None = None
+        percent: float | None = None
 
-        self._initial = self.pbar.initial
-        self._start_t = self.pbar.start_t
-
-        self.total_items = None
-        self.rate = None
-        self.n = None
-
-        self.percent = None
-
-        self.start_time = datetime.datetime.fromtimestamp(self._start_t)
-
-
-    def _make_eta_bar_format(
-            self
-    ):
-        preformat_dict = {
-            "r_bar": "| ({n_fmt}/{total_fmt}) | R: {remaining} | ETA: {eta}",
-            "r_barL": "| ({n_fmt}/{total_fmt}) | Remaining: {remainingL} | ETA: {etaL}"
-        }
-        preformatted_text = self.bar_format.format_map(SafeDict(**preformat_dict))
-
-        format_dict = {
-            "start": TimeString.DateTime.short(self.start_time),
-            "startL": TimeString.DateTime.long(self.start_time),
-            "current": TimeString.DateTime.short(
-                self.current_time) if self.current_time else EtaDefaults.low_data_string,
-            "currentL": TimeString.DateTime.long(
-                self.current_time) if self.current_time else EtaDefaults.low_data_string,
-            "elapsed": TimeString.TimeDelta.short(
-                self.elapsed_time) if self.elapsed_time else EtaDefaults.low_data_string,
-            "elapsedL": TimeString.TimeDelta.long(
-                self.elapsed_time) if self.elapsed_time else EtaDefaults.low_data_string,
-            "remaining": TimeString.TimeDelta.short(
-                self.remaining_time) if self.remaining_time else EtaDefaults.low_data_string,
-            "remainingL": TimeString.TimeDelta.long(
-                self.remaining_time) if self.remaining_time else EtaDefaults.low_data_string,
-            "eta": TimeString.DateTime.short(
-                self.eta_time) if self.eta_time else EtaDefaults.low_data_string,
-            "etaL": TimeString.DateTime.long(
-                self.eta_time) if self.eta_time else EtaDefaults.low_data_string
-        }
-
-        formatted_text = preformatted_text.format_map(SafeDict(**format_dict))
-
-        return formatted_text
-
-    def update(self, n: int = None):
-        pbar_format_dict = self.pbar.format_dict
-
-        if n is None:
-            self.n = pbar_format_dict["n"]
-        else:
-            self.n = n
-            self.pbar.update(self.n)
-
-        self.pbar.bar_format = self._make_eta_bar_format()
+    @property
+    def format_dict(self):
+        d = super().format_dict
 
         # Extract useful information from the tqdm progress bar
-        self.total_items = pbar_format_dict["total"]
-        current_t = self.pbar.last_print_t
-        self.rate = pbar_format_dict["rate"]
-        elapsed_t = pbar_format_dict["elapsed"]
+        self.Stats.initial = d["initial"]
+        self.Stats.n = d["n"]
+        self.Stats.total_items = d["total"]
+        self.Stats.elapsed_time = d["elapsed"]
+        self.Stats.current_time = self.Stats.start_time + self.Stats.elapsed_time if self.Stats.start_time else None
+        self.Stats.rate = d["rate"]
 
-        if self.rate is None and elapsed_t:
-            self.rate = (self.n - self._initial) / elapsed_t
+        if self.Stats.rate is None and self.Stats.elapsed_time:
+            self.Stats.rate = (self.Stats.n - self.Stats.initial) / self.Stats.elapsed_time
 
         # Compute some values based on the tqdm source code
-        elapsed_t = current_t - self._start_t if current_t else 0
-        remaining_t = (self.total_items - self.n) / self.rate if self.rate and self.total_items else None
+        self.Stats.remaining_time = (self.Stats.total_items - self.Stats.n) / self.Stats.rate if (
+                self.Stats.rate and self.Stats.total_items) else None
 
         # Compute the ETA
-        eta_t = current_t + remaining_t if remaining_t else None
+        self.Stats.eta_time = self.Stats.current_time + self.Stats.remaining_time if (
+                self.Stats.remaining_time and self.Stats.current_time) else None
 
         # Get the percent
-        self.percent = self.n / self.total_items if self.total_items else None
+        self.Stats.percent = self.Stats.n / self.Stats.total_items if self.Stats.total_items else None
 
-        # Get datetimes from timestamps
-        self.current_time = datetime.datetime.fromtimestamp(current_t) if current_t else None
-        self.elapsed_time = datetime.timedelta(seconds=elapsed_t)
-        self.remaining_time = datetime.timedelta(seconds=remaining_t) if remaining_t else None
-        self.eta_time = datetime.datetime.fromtimestamp(eta_t) if eta_t else None
+        # Get the datetime objects
+        self.Stats.start_datetime = datetime.datetime.fromtimestamp(self.Stats.start_time) if (
+            self.Stats.start_time) else None
+        self.Stats.current_datetime = datetime.datetime.fromtimestamp(self.Stats.current_time) if (
+            self.Stats.current_time) else None
+        self.Stats.elapsed_timedelta = datetime.timedelta(seconds=self.Stats.elapsed_time) if (
+            self.Stats.elapsed_time) else None
+        self.Stats.remaining_timedelta = datetime.timedelta(seconds=self.Stats.remaining_time) if (
+            self.Stats.remaining_time) else None
+        self.Stats.eta_datetime = datetime.datetime.fromtimestamp(self.Stats.eta_time) if (
+            self.Stats.eta_time) else None
 
-    def __iter__(self):
-        try:
-            for item in self.pbar:
-                self.update()
-                yield item
-        finally:
-            self.update()
+        # Add custom format codes
+        start_string = TimeString.DateTime.short(self.Stats.start_datetime) if (
+            self.Stats.start_datetime) else EtaDefaults.low_data_string
+        start_string = f"S: {start_string}"
+        d.update(startS=start_string)
+        startL_string = TimeString.DateTime.long(self.Stats.start_datetime) if (
+            self.Stats.start_datetime) else EtaDefaults.low_data_string
+        startL_string = f"S: {startL_string}"
+        d.update(startL=startL_string)
+
+        current_string = TimeString.DateTime.short(self.Stats.current_datetime) if (
+            self.Stats.current_datetime) else EtaDefaults.low_data_string
+        current_string = f"C: {current_string}"
+        d.update(currentS=current_string)
+        currentL_string = TimeString.DateTime.long(self.Stats.current_datetime) if (
+            self.Stats.current_datetime) else EtaDefaults.low_data_string
+        currentL_string = f"C: {currentL_string}"
+        d.update(currentL=currentL_string)
+
+        elapsed_string = TimeString.TimeDelta.short(self.Stats.elapsed_timedelta) if (
+            self.Stats.elapsed_timedelta) else EtaDefaults.low_data_string
+        elapsed_string = f"E: {elapsed_string}"
+        d.update(elapsedS=elapsed_string)
+        elapsedL_string = TimeString.TimeDelta.long(self.Stats.elapsed_timedelta) if (
+            self.Stats.elapsed_timedelta) else EtaDefaults.low_data_string
+        elapsedL_string = f"E: {elapsedL_string}"
+        d.update(elapsedL=elapsedL_string)
+
+        remaining_string = TimeString.TimeDelta.short(self.Stats.remaining_timedelta) if (
+            self.Stats.remaining_timedelta) else EtaDefaults.low_data_string
+        remaining_string = f"R: {remaining_string}"
+        d.update(remainingS=remaining_string)
+        remainingL_string = TimeString.TimeDelta.long(self.Stats.remaining_timedelta) if (
+            self.Stats.remaining_timedelta) else EtaDefaults.low_data_string
+        remainingL_string = f"R: {remainingL_string}"
+        d.update(elapsedL=remainingL_string)
+
+        eta_string = TimeString.DateTime.short(self.Stats.eta_datetime) if (
+            self.Stats.eta_datetime) else EtaDefaults.low_data_string
+        eta_string = f"ETA: {eta_string}"
+        d.update(etaS=eta_string)
+        etaL_string = TimeString.DateTime.long(self.Stats.eta_datetime) if (
+            self.Stats.eta_datetime) else EtaDefaults.low_data_string
+        etaL_string = f"ETA: {etaL_string}"
+        d.update(etaL=etaL_string)
+
+        return d
