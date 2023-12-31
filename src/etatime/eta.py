@@ -2,8 +2,8 @@
 import datetime
 from dataclasses import dataclass
 from tqdm import tqdm
-
 import timefmt
+
 from etatime.constants import EtaDefaults
 
 
@@ -26,14 +26,25 @@ class EtaStats:
     percent: float | None = None
 
 
+class SafeDict(dict):
+    def __missing__(self, key):
+        return '{' + key + '}'
+
+
 class EtaBar(tqdm):
     def __init__(
             self,
             *args,
-            bar_format: str = "{l_bar}{bar}| {n_fmt}/{total_fmt} | {remainingS} | {etaS}",
+            bar_format: str = "{l_bar}{bar}{r_barS}",
             **kwargs):
         if "bar_format" in kwargs:
             del kwargs["bar_format"]
+
+        bar_format = bar_format.format_map(SafeDict(
+            r_barS="| {n_fmt}/{total_fmt} | {remainingS} | {etaS}",
+            r_barL="| {n_fmt}/{total_fmt} | {remainingL} | {etaL}",
+        ))
+
         self.stats = EtaStats()
 
         super().__init__(*args, bar_format=bar_format, **kwargs)

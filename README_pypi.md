@@ -43,7 +43,7 @@ Done processing 100 items in 53 seconds!
 
 You can get more verbose information by replacing the for loop with this:
 ```python
-for item in (eta := EtaBar(range(100), bar_format="{l_bar}{bar}| {remainingL} | {etaL}")):
+for item in (eta := EtaBar(range(100), bar_format="{l_bar}{bar}{r_barL}")):
 ```
 Here is an example of the long output:
 ```
@@ -61,6 +61,8 @@ All keyword arguments other than `bar_format` get passed directly to `tqdm.tqdm`
 - `remainingL`: The remaining time written out in plain english.
 - `etaS`: The ETA time in short digit format.
 - `etaL`: The ETA time written out in plain english.
+- `r_barS` == `"| {n_fmt}/{total_fmt} | {remainingS} | {etaS}"`
+- `r_barL` == `"| {n_fmt}/{total_fmt} | {remainingL} | {etaL}"`
 
 The following attributes are available in the `Stats` class of the `EtaBar` instance:
 - `total_items`
