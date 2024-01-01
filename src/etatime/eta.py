@@ -124,7 +124,7 @@ class EtaBar(tqdm):
         remaining_long_string = timefmt.td.long(self.stats.remaining_timedelta) if (
             self.stats.remaining_timedelta) else EtaDefaults.low_data_string
         remaining_long_string = f"R: {remaining_long_string}"
-        d.update(elapsedL=remaining_long_string)
+        d.update(remainingL=remaining_long_string)
 
         eta_string = timefmt.dt.short(self.stats.eta_datetime) if (
             self.stats.eta_datetime) else EtaDefaults.low_data_string

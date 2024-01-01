@@ -1,0 +1,42 @@
+name: Deploy Master
+run-name:  Test, Build, and Upload (${{ github.actor }})
+on:
+  push:
+    branches:
+      - main
+jobs:
+  Deploy-Master:
+    name: Test, Build, and Upload
+    runs-on: ubuntu-latest
+    environment:
+      name: deploy-master
+      url: https://pypi.org/p/etatime
+    permissions:
+      id-token: write
+    steps:
+      - run: echo "This job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "Running on a ${{ runner.os }} server."
+      - name: Checkout ${{ github.repository }}
+        uses: actions/checkout@v4
+      - name: Set timezone to MST
+        uses: szenius/set-timezone@v1.2
+        with:
+          timezoneLinux: "US/Arizona"
+          timezoneMacos: "US/Arizona"
+          timezoneWindows: "US Mountain Standard Time"
+      - name: Install Python Tools
+        run: python3 -m pip install build twine coverage pytest pytest-codeblocks
+      - name: Build with Python
+        run: python3 -m build
+      - name: Install Local Package
+        run: python3 -m pip install -e .
+      - name: Run Coverage and Unit Tests
+        run: coverage run -m pytest
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Upload coverage reports to Coveralls
+        uses: coverallsapp/github-action@v2
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.8.11

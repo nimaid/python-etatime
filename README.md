@@ -1,12 +1,17 @@
 # ETA Time
 ### A library for tracking, computing, and formatting time estimates in Python. (Based on `tqdm`.)
+[![Python Version](https://img.shields.io/pypi/pyversions/etatime?logo=python&logoColor=white)](https://pypi.org/project/etatime/)
+[![PyPI Version](https://img.shields.io/pypi/v/etatime?logo=PyPI&logoColor=white)](https://pypi.org/project/etatime/)
 
-<p align="center"><a href="https://pypi.org/project/etatime/"><img src="https://pypi.org/static/images/logo-large.9f732b5f.svg" width="200px" alt="etatime on Pypi"></a></p>
+[![GitHub Build](https://img.shields.io/github/actions/workflow/status/nimaid/python-etatime/master.yml?logo=GitHub)](https://github.com/nimaid/python-etatime/actions/workflows/master.yml)
+[![Coveralls Coverage](https://img.shields.io/coverallsCoverage/github/nimaid/python-etatime?logo=coveralls)](https://coveralls.io/github/nimaid/python-etatime)
+[![Codecov Coverage](https://img.shields.io/codecov/c/github/nimaid/python-etatime?logo=codecov&logoColor=white)](https://codecov.io/gh/nimaid/python-etatime)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/3623bf84675842359f12d73682023429)](https://app.codacy.com/gh/nimaid/python-etatime/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
-## Installation
-```commandline
-pip install etatime
-```
+[![License](https://img.shields.io/pypi/l/etatime?logo=opensourceinitiative&logoColor=white)](https://github.com/nimaid/python-etatime/raw/main/LICENSE)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/etatime.svg?label=pypi%20downloads&logo=PyPI&logoColor=white)](https://pypi.org/project/etatime/)
+
+
 
 ## Why?
 [tqdm](https://github.com/tqdm/tqdm) is probably the most popular option for Python programmers to show progress in their programs. However, I wasn't happy with the default formatting code options, and wanted something that was easier to read and understand for an average user.
@@ -14,8 +19,6 @@ pip install etatime
 In addition, I wanted to be able to access information like ETA in my code. While `tqdm` sort of lets you do this, it's not well documented, and you would have to dig through the source code to get the values and formulas you want.
 
 `etatime` is my answer to this. It's a minimal wrapper around `tqdm` that adds additional formatting codes and well-documented progress stats tracking.
-
-*The `time` submodule is pretty useful too.*
 
 ## Basic Usage
 The main feature of this library is the `EtaBar` class. This is a wrapper for the `tqdm.tqdm` class that provides variables which track important ETA state information for use elsewhere in your code.
@@ -29,32 +32,29 @@ import time, random
 import timefmt
 from etatime import EtaBar
 
-
-# Just a placeholder function that takes a random amount of time
-def process_item(item):
-    time.sleep(random.random())
-
-
-for item in (eta := EtaBar(range(100))):  # Creates a progress bar which tracks stats
-    process_item(item)  # Do your processing here
+for item in (eta := EtaBar(range(9999999))):  # Creates a progress bar which tracks stats
+    ...  # Do your processing here
 
 print(f"Done processing {eta.stats.total_items} items in {timefmt.td.long(eta.stats.elapsed_timedelta)}!\n")
 ```
 Here is an example of the sort of output this produces:
 ```
- 16%|█▌        | (16/100) | R: 0:00:17 | ETA: 3:13:26 AM
+ 14%|█▍        | 1432400/9999999 | R: 0:00:02 | ETA: 5:22:13 PM
  ...
- 100%|██████████| (100/100) | R: 0:00:01 | ETA: 3:46:01 AM
-Done processing 100 items in 53 seconds!
+100%|██████████| 9999999/9999999 | R: ??? | ETA: ???
+Done processing 9999999 items in 2 seconds!
 ```
 
 You can get more verbose information by replacing the for loop with this:
 ```python
-for item in (eta := EtaBar(range(100), bar_format="{l_bar}{bar}{r_barL}")):
+from etatime import EtaBar
+
+for item in (eta := EtaBar(range(9999999), bar_format="{l_bar}{bar}{r_barL}")):
+    ...  # Do your processing here
 ```
 Here is an example of the long output:
 ```
- 13%|█▎        | (13/100) | Remaining: 20 seconds | ETA: 3:12:16 AM US Mountain Standard Time
+ 35%|███▌      | 3545009/9999999 | R: 1 second | ETA: 5:26:11 PM MST
 ```
 
 All keyword arguments other than `bar_format` get passed directly to `tqdm.tqdm`. `bar_format` is pre-processed by `etatime` in order to inject some new custom [formatting codes](https://tqdm.github.io/docs/tqdm/#tqdm-objects):
@@ -71,7 +71,7 @@ All keyword arguments other than `bar_format` get passed directly to `tqdm.tqdm`
 - `r_barS` == `"| {n_fmt}/{total_fmt} | {remainingS} | {etaS}"`
 - `r_barL` == `"| {n_fmt}/{total_fmt} | {remainingL} | {etaL}"`
 
-The following attributes are available in the `Stats` class of the `EtaBar` instance:
+The following attributes are available in the `stats` data class of the `EtaBar` instance:
 - `total_items`
 - `rate`
 - `initial`

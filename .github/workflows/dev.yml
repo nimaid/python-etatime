@@ -1,0 +1,27 @@
+name: Test Dev
+run-name:  Test (${{ github.actor }})
+on:
+  push:
+    branches:
+      - dev
+jobs:
+  Test-Dev:
+    name: Test
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - run: echo "This job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "Running on a ${{ runner.os }} server."
+      - name: Checkout ${{ github.repository }}
+        uses: actions/checkout@v4
+      - name: Set timezone to MST
+        uses: szenius/set-timezone@v1.2
+        with:
+          timezoneLinux: "US/Arizona"
+      - name: Install Python Tools
+        run: python3 -m pip install coverage pytest pytest-codeblocks
+      - name: Install Local Package
+        run: python3 -m pip install -e .
+      - name: Run Coverage and Unit Tests
+        run: coverage run -m pytest
