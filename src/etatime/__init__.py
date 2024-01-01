@@ -1,6 +1,6 @@
 """A library for tracking, computing, and formatting time estimates. (Based on `tqdm`)."""
 
-__version__ = "3.5.2"
+__version__ = "3.5.3"
 
 from etatime.eta import EtaBar
 
