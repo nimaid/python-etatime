@@ -58,34 +58,34 @@ Here is an example of the long output:
 ```
 
 All keyword arguments other than `bar_format` get passed directly to `tqdm.tqdm`. `bar_format` is pre-processed by `etatime` in order to inject some new custom [formatting codes](https://tqdm.github.io/docs/tqdm/#tqdm-objects):
-  - `startS`: The starting time in short digit format.
-  - `startL`: The starting time written out in plain english.
-  - `currentS`: The current (loop start time) time in short digit format.
-  - `currentL`: The current (loop start time) time written out in plain english.
-  - `elapsedS`: The elapsed time in short digit format.
-  - `elapsedL`: The elapsed time written out in plain english.
-  - `remainingS`: The remaining time in short digit format.
-  - `remainingL`: The remaining time written out in plain english.
-  - `etaS`: The ETA time in short digit format.
-  - `etaL`: The ETA time written out in plain english.
-  - `r_barS` == `"| {n_fmt}/{total_fmt} | {remainingS} | {etaS}"`
-  - `r_barL` == `"| {n_fmt}/{total_fmt} | {remainingL} | {etaL}"`
+- `startS`: The starting time in short digit format.
+- `startL`: The starting time written out in plain english.
+- `currentS`: The current (loop start time) time in short digit format.
+- `currentL`: The current (loop start time) time written out in plain english.
+- `elapsedS`: The elapsed time in short digit format.
+- `elapsedL`: The elapsed time written out in plain english.
+- `remainingS`: The remaining time in short digit format.
+- `remainingL`: The remaining time written out in plain english.
+- `etaS`: The ETA time in short digit format.
+- `etaL`: The ETA time written out in plain english.
+- `r_barS` == `"| {n_fmt}/{total_fmt} | {remainingS} | {etaS}"`
+- `r_barL` == `"| {n_fmt}/{total_fmt} | {remainingL} | {etaL}"`
 
 The following attributes are available in the `stats` data class of the `EtaBar` instance:
-  - `total_items`
-  - `rate`
-  - `initial`
-  - `n`
-  - `percent`
-  - `start_time` (seconds)
+- `total_items`
+- `rate`
+- `initial`
+- `n`
+- `percent`
+- `start_time` (seconds)
     - `start_datetime`
-  - `current_time` (seconds)
+- `current_time` (seconds)
     - `current_datetime`
-  - `elapsed_time` (seconds)
+- `elapsed_time` (seconds)
     - `elapsed_timedelta`
-  - `remaining_time` (seconds)
+- `remaining_time` (seconds)
     - `remaining_timedelta`
-  - `eta_time` (seconds)
+- `eta_time` (seconds)
     - `eta_datetime`
 
 # Full Documentation
