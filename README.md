@@ -4,7 +4,6 @@
 [![PyPI Version](https://img.shields.io/pypi/v/etatime?logo=PyPI&logoColor=white)](https://pypi.org/project/etatime/)
 
 [![GitHub Build](https://img.shields.io/github/actions/workflow/status/nimaid/python-etatime/master.yml?logo=GitHub)](https://github.com/nimaid/python-etatime/actions/workflows/master.yml)
-[![Coveralls Coverage](https://img.shields.io/coverallsCoverage/github/nimaid/python-etatime?logo=coveralls)](https://coveralls.io/github/nimaid/python-etatime)
 [![Codecov Coverage](https://img.shields.io/codecov/c/github/nimaid/python-etatime?logo=codecov&logoColor=white)](https://codecov.io/gh/nimaid/python-etatime)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/3623bf84675842359f12d73682023429)](https://app.codacy.com/gh/nimaid/python-etatime/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
